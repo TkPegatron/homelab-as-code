@@ -1,0 +1,5 @@
+---
+# -- snapshot schedule
+k3s_etcd_snapshot_schedule_cron: "0 */6 * * *"
+# -- snapshot retention
+k3s_etcd_snapshot_retention: 28

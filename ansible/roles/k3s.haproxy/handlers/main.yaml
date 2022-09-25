@@ -1,0 +1,23 @@
+- name: Reload kernel configuration
+  ansible.builtin.shell: systemctl restart systemd-sysctl
+  listen: "sysctl"
+
+- name: Restart and enable haproxy systemd service
+  ansible.builtin.systemd:
+    name: "haproxy"
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  listen: "haproxy"
+  become: true
+  when: k3s_control_node
+
+- name: Restart and enable keepalived systemd service
+  ansible.builtin.systemd:
+    name: "keepalived"
+    state: restarted
+    daemon_reload: true
+    enabled: true
+  listen: "keepalived"
+  become: true
+  when: k3s_control_node

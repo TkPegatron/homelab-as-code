@@ -1,0 +1,24 @@
+ansible_user: ansible
+ansible_ssh_private_key_file: './files/private_keys/ansible-ssh-ed25519'
+
+network_facts:
+  trusted_prefixes:
+    - '10.254.254.0/30' # Direct connection / Untagged interface for firewall maintenance
+    - '172.22.0.0/25'   # Control Plane Network
+    - '172.22.0.128/25' # Wireguard VPN Network
+    - '172.22.1.0/24'   # User/BYOD network (TODO: Remove this)
+    - '10.10.0.0/16'    # Kubernetes VM Network
+    - '10.20.0.0/24'    # Workstation VM Network
+  trusted_summary_prefix:
+    - '172.22.0.0/16'
+  control_plane_prefix: "172.22.0.0/25"
+
+
+# -- { Bird BGP } -- #
+ibgp_asn: "64627"
+ibgp_routers:
+  - 172.22.0.1
+
+
+# -- { Kubernetes global } -- #
+k3s_registration_address: 172.22.0.20

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kube-system
+  name: bgp-config
+data:
+  config.yaml: |
+    peers:
+{% for router in ibgp_routers %}
+    - peer-address: {{ router }}
+      peer-asn: {{ ibgp_asn }}
+{%  if ibgp_passwd is defined %}
+      password: {{ ibgp_passwd }}
+{%  endif %}
+      my-asn: {{ ibgp_asn }}
+{% endfor %}
+    address-pools:
+    - name: default
+      protocol: bgp
+      addresses:
+      - 172.21.0.0/16

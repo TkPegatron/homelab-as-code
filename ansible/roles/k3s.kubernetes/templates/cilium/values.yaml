@@ -1,0 +1,97 @@
+# kubeProxyReplacement enables kube-proxy replacement in Cilium BPF datapath
+# Valid options are "disabled", "probe", "partial", "strict".
+# ref: https://docs.cilium.io/en/stable/gettingstarted/kubeproxy-free/
+kubeProxyReplacement: strict
+
+k8sServiceHost: 172.22.0.20 
+k8sServicePort: 6443
+
+extraConfig:
+  enable-envoy-config: "true"
+
+containerRuntime:
+  integration: containerd
+
+ipam:
+  # -- Configure IP Address Management mode.
+  # ref: https://docs.cilium.io/en/stable/concepts/networking/ipam/
+  mode: "kubernetes"
+  operator:
+    # -- IPv4 CIDR list range to delegate to individual nodes for IPAM.
+    clusterPoolIPv4PodCIDRList: ["10.0.0.0/16"]
+    # -- IPv4 CIDR mask size to delegate to individual nodes for IPAM.
+    clusterPoolIPv4MaskSize: 24
+    # -- IPv6 CIDR list range to delegate to individual nodes for IPAM.
+    #clusterPoolIPv6PodCIDRList: ["fd00::/104"]
+    # -- IPv6 CIDR mask size to delegate to individual nodes for IPAM.
+    #clusterPoolIPv6MaskSize: 120
+
+# -- Enables masquerading of IPv4 traffic leaving the node from endpoints.
+enableIPv4Masquerade: true
+
+# -- Enables masquerading of IPv6 traffic leaving the node from endpoints.
+enableIPv6Masquerade: true
+
+# masquerade enables masquerading of traffic leaving the node for
+# destinations outside of the cluster.
+masquerade: true
+
+bpf:
+  # -- Enable native IP masquerade support in eBPF
+  masquerade: false
+
+  # -- Configure whether direct routing mode should route traffic via
+  # host stack (true) or directly and more efficiently out of BPF (false) if
+  # the kernel supports it. The latter has the implication that it will also
+  # bypass netfilter in the host namespace.
+  hostRouting: true
+
+  # -- Configure the eBPF-based TPROXY to reduce reliance on iptables rules
+  # for implementing Layer 7 policy.
+  tproxy: true
+
+# autoDirectNodeRoutes enables installation of PodCIDR routes between worker
+# nodes if worker nodes share a common L2 network segment.
+#autoDirectNodeRoutes: true
+
+# nativeRoutingCIDR allows to explicitly specify the CIDR for native routing. This
+# value corresponds to the configured cluster-cidr.
+nativeRoutingCIDR: 10.0.0.0/16
+
+# Cilium leverages MetalLB's simplified BGP announcement system for service type: LoadBalancer
+bgp:
+  enabled: true
+  announce:
+    loadbalancerIP: true
+
+operator:
+  # -- Roll out cilium-operator pods automatically when configmap is updated.
+  rollOutPods: true
+  #replicas: 1
+
+hubble:
+  # -- Enable Hubble (true by default).
+  enabled: true
+  
+  relay:
+    # -- Enable Hubble Relay (requires hubble.enabled=true)
+    enabled: true
+
+  ui:
+    # -- Whether to enable the Hubble UI.
+    enabled: true
+
+ipv6:
+  # -- Enable IPv6 support.
+  enabled: false
+
+# -- Roll out cilium agent pods automatically when configmap is updated.
+rollOutCiliumPods: true
+
+# -- Configure the eBPF-based ip-masq-agent
+ipMasqAgent:
+  enabled: false
+
+# disableEnvoyVersionCheck removes the check for Envoy, which can be useful
+# on AArch64 as the images do not currently ship a version of Envoy.
+disableEnvoyVersionCheck: true
