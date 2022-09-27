@@ -1,0 +1,31 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: "${SECRET_DOMAIN/./-}"
+  namespace: kube-system
+spec:
+  secretName: "${SECRET_DOMAIN/./-}-tls"
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  commonName: "${SECRET_DOMAIN}"
+  dnsNames:
+    - "${SECRET_DOMAIN}"
+    - "*.${SECRET_DOMAIN}"
+#---
+#apiVersion: cert-manager.io/v1
+#kind: Certificate
+#metadata:
+#  name: "${SECRET_PRIVATE_DOMAIN/./-}"
+#  namespace: kube-system
+#spec:
+#  secretName: "${SECRET_PRIVATE_DOMAIN/./-}-tls"
+#  issuerRef:
+#    name: letsencrypt-production
+#    kind: ClusterIssuer
+#  commonName: "${SECRET_PRIVATE_DOMAIN}"
+#  dnsNames:
+#    - "${SECRET_PRIVATE_DOMAIN}"
+#    - "*.${SECRET_PRIVATE_DOMAIN}"
+#

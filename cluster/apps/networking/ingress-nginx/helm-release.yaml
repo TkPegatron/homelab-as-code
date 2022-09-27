@@ -59,7 +59,7 @@ spec:
       #podAnnotations:
       #  configmap.reloader.stakater.com/reload: "cloudflare-proxied-networks"
       extraArgs:
-        default-ssl-certificate: "kube-system/${SECRET_PUBLIC_DOMAIN/./-}-tls"
+        default-ssl-certificate: "kube-system/${SECRET_DOMAIN/./-}-tls"
       resources:
         requests:
           cpu: 10m
