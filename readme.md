@@ -18,7 +18,18 @@ My major goal with this repo is to learn both Linux system administration and en
 
 More in-depth documentation, including drawio diagrams can be found in [./docs](./docs).
 
+### Provisioning steps
 
+cd provision/ansible
+source ~/.local/lib/python-venv/ansible/bin/activate
+ansible-playbook playbooks/k3s.deploy.yaml
+helm template cilium cilium/cilium --namespace kube-system -f roles/k3s.kubernetes/templates/cilium/values.yaml > /tmp/cillium-manifest.yaml
+kubectl apply -f /tmp/cilium-bgp-configmap.yaml
+kubectl apply -f /tmp/cillium-manifest.yaml
+export GITHUB_TOKEN=${github_token}
+flux bootstrap github --owner=tkpegatron --repository=homelab-as-code --branch=main --path=./cluster/flux --personal
+age-keygen -o age.agekey
+cat age.agekey | kubectl create secret generic sops-age --namespace=flux-system --from-file=age.agekey=/dev/stdin
 
 ### TODO
 
