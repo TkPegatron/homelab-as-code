@@ -1,0 +1,75 @@
+---
+# Source: syncthing/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing-discovery
+  labels:
+    app.kubernetes.io/instance: syncthing
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/version: 1.21.0
+  annotations:
+    
+    metallb.universe.tf/allow-shared-ip: syncthing
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.21.0.1
+  externalTrafficPolicy: Local
+  ports:
+  - port: 21027
+    targetPort: 21027
+    protocol: UDP
+    name: discovery
+  selector:
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/instance: syncthing
+---
+# Source: syncthing/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing-listen
+  labels:
+    app.kubernetes.io/instance: syncthing
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/version: 1.21.0
+  annotations:
+    
+    metallb.universe.tf/allow-shared-ip: syncthing
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.21.0.1
+  externalTrafficPolicy: Local
+  ports:
+  - port: 22000
+    targetPort: 22000
+    protocol: TCP
+    name: listen
+  selector:
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/instance: syncthing
+---
+# Source: syncthing/templates/common.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing
+  labels:
+    app.kubernetes.io/instance: syncthing
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/version: 1.21.0
+  annotations:
+    
+    metallb.universe.tf/allow-shared-ip: syncthing
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 172.21.0.1
+  ports:
+  - port: 8384
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: syncthing
+    app.kubernetes.io/instance: syncthing
