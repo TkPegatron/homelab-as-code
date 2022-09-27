@@ -19,7 +19,7 @@ spec:
       interval: 5m
   values:
     defaultSettings:
-      backupTarget: "nfs://kvm-xenia.int.zynthovian.xyz:/mnt/media/KubePVC/Longhorn-Backup"
+      backupTarget: "nfs://${NFS_SERVER_FQDN}:${LONGHORN_NFS_BACKP_PATH}"
     resources:
       requests:
         cpu: 100m

@@ -18,6 +18,20 @@ My major goal with this repo is to learn both Linux system administration and en
 
 More in-depth documentation, including drawio diagrams can be found in [./docs](./docs).
 
+## 📂 Repository structure
+
+The Git repository contains the following directories under `cluster` and are ordered below by how Flux will apply them.
+
+```sh
+📁 cluster      # k8s cluster defined as code
+├─📁 flux       # flux, gitops operator, loaded before everything
+├─📁 crds       # custom resources, loaded before 📁 core and 📁 apps
+├─📁 charts     # helm repos, loaded before 📁 core and 📁 apps
+├─📁 config     # cluster config, loaded before 📁 core and 📁 apps
+├─📁 core       # crucial apps, namespaced dir tree, loaded before 📁 apps
+└─📁 apps       # regular apps, namespaced dir tree, loaded last
+```
+
 ### Provisioning steps
 
 cd provision/ansible
