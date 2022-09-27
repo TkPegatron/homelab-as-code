@@ -24,11 +24,10 @@ spec:
         app.kubernetes.io/name: syncthing
         app.kubernetes.io/instance: syncthing
     spec:
-      
       serviceAccountName: default
       automountServiceAccountToken: true
       securityContext:
-        runAsNonRoot: true
+        runAsUser: 1000
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       containers:
