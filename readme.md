@@ -32,18 +32,27 @@ The Git repository contains the following directories under `cluster` and are or
 └─📁 apps       # regular apps, namespaced dir tree, loaded last
 ```
 
+
+
+
+
 ### Provisioning steps
+
+If we are building a new cluster we need to create an age key
+age-keygen -o age.agekey
+
 
 cd provision/ansible
 source ~/.local/lib/python-venv/ansible/bin/activate
 ansible-playbook playbooks/k3s.deploy.yaml
+kubectl create namespace flux-system --dry-run=client -o yaml | kubectl apply -f -
+cat ~/.config/sops/age/keys.txt | kubectl create secret generic sops-age --namespace=flux-system --from-file=age.agekey=/dev/stdin
 helm template cilium cilium/cilium --namespace kube-system -f roles/k3s.kubernetes/templates/cilium/values.yaml > /tmp/cillium-manifest.yaml
 kubectl apply -f /tmp/cilium-bgp-configmap.yaml
 kubectl apply -f /tmp/cillium-manifest.yaml
 export GITHUB_TOKEN=${github_token}
 flux bootstrap github --owner=tkpegatron --repository=homelab-as-code --branch=main --path=./cluster/flux --personal
-age-keygen -o age.agekey
-cat age.agekey | kubectl create secret generic sops-age --namespace=flux-system --from-file=age.agekey=/dev/stdin
+
 
 ### TODO
 
