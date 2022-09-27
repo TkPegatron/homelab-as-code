@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: eperry-syncthing-data
-  namespace: eperry
+  namespace: default
 spec:
   volumeName: eperry-syncthing-data
   accessModes: [ ReadWriteOnce ]

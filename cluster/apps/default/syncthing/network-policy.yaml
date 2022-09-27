@@ -32,7 +32,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: syncthing-ingress-policy
-  namespace: eperry
+  namespace: default
 spec:
   endpointSelector:
     matchLabels:

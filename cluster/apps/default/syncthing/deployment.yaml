@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: syncthing
+  namespace: default
   labels:
     app.kubernetes.io/instance: syncthing
     app.kubernetes.io/name: syncthing
