@@ -1,0 +1,36 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vauiltwarden
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: vaultwarden
+    app.kubernetes.io/name: vaultwarden
+    app.kubernetes.io/version: 1.25.2
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    hajimari.io/enable: 'true'
+    hajimari.io/icon: 'account-lock'
+    nginx.ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - vault.zynthovian.xyz
+  rules:
+    - host: vault.zynthovian.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              port: 80
+          - path: /notifications/hub/negotiate
+            pathType: Prefix
+            service:
+              port: 80
+          - path: /notifications/hub
+            pathType: Prefix
+            service:
+              port: 3012
