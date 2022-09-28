@@ -24,13 +24,22 @@ spec:
         paths:
           - path: /
             pathType: Prefix
-            service:
-              port: 80
+            backend:
+              service:
+                name: vaultwarden
+                port:
+                  number: 80
           - path: /notifications/hub/negotiate
             pathType: Prefix
-            service:
-              port: 80
+            backend:
+              service:
+                name: vaultwarden
+                port:
+                  number: 80
           - path: /notifications/hub
             pathType: Prefix
-            service:
-              port: 3012
+            backend:
+              service:
+                name: vaultwarden
+                port:
+                  number: 3012
