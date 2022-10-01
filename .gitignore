@@ -19,3 +19,4 @@ terraform.tfstate*
 megalinter-reports
 provision/ansible/collections/*
 provision/ansible/files/private_keys/*
+provision/terraform/cloudflare/.terraform.lock.hcl
