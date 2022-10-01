@@ -1,0 +1,12 @@
+# Network-Bound Disk Encryption
+
+- name: Deploy NBDE Tang server
+  hosts: nbde_servers
+  roles:
+    - nbde_server
+
+- name: Deploy NBDE Clevis clients
+  hosts: nbde_clients
+  roles:
+    - linux-system-roles.nbde_client
+
