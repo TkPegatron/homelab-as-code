@@ -2,12 +2,12 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: &app n8n
+  name: n8n
   namespace: default
   labels:
-    app.kubernetes.io/name: *app
-    app.kubernetes.io/instance: *app
-    app.kubernetes.io/version: &version 0.196.0
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/instance: n8n
+    app.kubernetes.io/version: 0.196.0
 spec:
   interval: 15m
   chart:
@@ -28,7 +28,7 @@ spec:
   values:
     image:
       repository: docker.io/n8nio/n8n
-      tag: *version
+      tag: 0.196.0
     env:
       TZ: "${TIMEZONE}"
     service:

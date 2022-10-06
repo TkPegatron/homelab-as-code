@@ -5,8 +5,8 @@ metadata:
   name: n8n-data
   namespace: default
   labels:
-    app.kubernetes.io/name: &name n8n
-    app.kubernetes.io/instance: *name
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/instance: n8n
     app.kubernetes.io/component: pvc
 spec:
   accessModes:
