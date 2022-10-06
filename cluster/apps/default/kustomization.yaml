@@ -6,4 +6,4 @@ resources:
   - hajimari
   - syncthing
   - vaultwarden
-  - n8n
+#  - n8n
