@@ -35,8 +35,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: vaultwarden-env
-            - secretRef:
-                name: vaultwarden-env
+          env:
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-env
+                  key: ADMIN_TOKEN
           ports:
             - name: http
               containerPort: 80
