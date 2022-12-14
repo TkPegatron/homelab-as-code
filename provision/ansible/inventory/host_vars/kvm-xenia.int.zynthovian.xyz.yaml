@@ -1,5 +1,6 @@
 nbde_client_bindings:
-  - device: /dev/sda3
+  - device: /dev/mediacore/media
+    slot: 7
     encryption_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           38336164353836666438336337633163396666326137343361316364353834346563326236356336
@@ -9,11 +10,4 @@ nbde_client_bindings:
           32363232643561313835613036656566663738373363366638353136343834353930666433636665
           6538333061633033323838383062346333363338346538303765
     servers:
-      - http://nbde.zynthovian.xyz:6830
-
-# Key Rotation Note
-# Script follows:
-#    export nbde_luks_key_slot=4
-#    sudo cryptsetup luksKillSlot /dev/sda3 {{ nbde_luks_key_slot }}
-#    sudo cryptsetup luksAddKey --key-slot={{ nbde_luks_key_slot }} /dev/sda3
-#    sudo cryptsetup --verbose open --test-passphrase /dev/sda3
+      - http://172.22.0.1:6830

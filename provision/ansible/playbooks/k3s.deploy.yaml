@@ -3,7 +3,7 @@
     - k3s-master-nodes
     - k3s-worker-nodes
   gather_facts: true
-  become: yes
+  become: true
   any_errors_fatal: true
   pre_tasks:
     - name: Pausing for 5 seconds...

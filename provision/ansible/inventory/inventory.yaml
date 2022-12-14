@@ -2,6 +2,8 @@
 all:
   hosts:
     rpi-edge-fw.man.zynthovian.xyz:
+      ansible_host: 172.22.0.1
+      ansible_init_user: eperry
     amd64-server-b5915c.int.zynthovian.xyz:
       ansible_host: 172.22.0.10
     amd64-server-7f97c6.int.zynthovian.xyz:
@@ -9,6 +11,7 @@ all:
     amd64-server-a2e7bb.int.zynthovian.xyz:
       ansible_host: 172.22.0.12
     kvm-xenia.int.zynthovian.xyz:
+      ansible_host: 172.22.0.3
   children:
     k3s-cluster:
       children:
@@ -23,5 +26,7 @@ all:
       hosts:
         rpi-edge-fw.man.zynthovian.xyz:
     nbde_clients:
+      hosts:
+        kvm-xenia.int.zynthovian.xyz:
       children:
         k3s-cluster:

@@ -1,12 +1,30 @@
 # Network-Bound Disk Encryption
-
 - name: Deploy NBDE Tang server
   hosts: nbde_servers
   roles:
-    - nbde_server
+    - linux-system-roles.nbde_server
+
+- name: Rotate NBDE Key
+  hosts: nbde_clients
+  become: true
+  tasks:
+    - name: Rotate key
+      loop: "{{ nbde_client_bindings }}"
+      no_log: true
+      ansible.builtin.shell:
+        cmd: |
+          if ! ((echo "{{ item.encryption_password }}") | cryptsetup --verbose open --test-passphrase {{ item.device }}); then
+            cryptsetup luksKillSlot {{ item.device }} {{ item.slot }} || true
+            printf "{{ item.encryption_password }}" > ./new_passphrase
+            printf "{{ luks_admin_password }}" > ./admin_passphrase
+            cryptsetup luksAddKey \
+              --key-file ./admin_passphrase \
+              --key-slot={{ item.slot }} \
+              {{ item.device }} ./new_passphrase
+            rm ./new_passphrase ./admin_passphrase
+          fi
 
 - name: Deploy NBDE Clevis clients
   hosts: nbde_clients
   roles:
     - linux-system-roles.nbde_client
-

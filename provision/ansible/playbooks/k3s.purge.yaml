@@ -31,3 +31,7 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ files_to_delete.files }}"
+    - name: Remove longhorn data
+      ansible.builtin.file:
+        path: /var/lib/longhorn
+        state: absent
