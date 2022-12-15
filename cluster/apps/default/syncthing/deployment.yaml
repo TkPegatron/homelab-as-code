@@ -28,6 +28,7 @@ spec:
       automountServiceAccountToken: true
       securityContext:
         runAsUser: 1000
+        fsGroup: 1000
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       containers:
