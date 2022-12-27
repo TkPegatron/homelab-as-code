@@ -1,6 +1,7 @@
 # Trash
 .DS_Store
 Thumbs.db
+.direnv/***
 # k8s
 kubeconfig
 # vscode-sops
@@ -20,3 +21,4 @@ megalinter-reports
 provision/ansible/collections/*
 provision/ansible/files/private_keys/*
 provision/terraform/cloudflare/.terraform.lock.hcl
+provision/ansible/inventory/group_vars/all/general.yaml

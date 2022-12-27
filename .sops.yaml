@@ -3,14 +3,14 @@ creation_rules:
   - path_regex: provision/.*\.sops\.ya?ml
     unencrypted_regex: "^(kind)$"
     key_groups:
-#      - pgp:
-#          - 90AB4A0FF0F17A5CAC2AEABAA538A7E3EC07999A
-      - age:
-          - age1kp5wl6yynwde798pmz2mqw3q8qzmt7c900gmjhvmn0swt4j7vdtqspunsa
+      - pgp:
+          - 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
+        age:
+          - age16atsrnff28efjkx3c5hmy88gwgwv5cpma0xkyjjw95vcw8kstp9sf4lf7w
   - path_regex: cluster/.*\.sops\.ya?ml
     encrypted_regex: "^(data|stringData)$"
     key_groups:
-#      - pgp:
-#          - 90AB4A0FF0F17A5CAC2AEABAA538A7E3EC07999A
-      - age:
-          - age1kp5wl6yynwde798pmz2mqw3q8qzmt7c900gmjhvmn0swt4j7vdtqspunsa
+      - pgp:
+          - 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
+        age:
+          - age16atsrnff28efjkx3c5hmy88gwgwv5cpma0xkyjjw95vcw8kstp9sf4lf7w
