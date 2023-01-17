@@ -1,0 +1,8 @@
+# yamllint disable
+apiVersion: v1
+kind: Secret
+metadata:
+    name: sops-age
+    namespace: flux-system
+stringData:
+    age.agekey: {{ SOPS_AGE_PRIVATE_KEY }}
