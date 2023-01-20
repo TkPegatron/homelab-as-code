@@ -1,5 +1,6 @@
 ---
-- hosts:
+- name: "Prepare hosts to become cluter members"
+  hosts:
     - master
     - worker
   become: true
@@ -26,6 +27,7 @@
             block: |
               127.0.1.1   {{ inventory_hostname }}
     - name: Packages | Fedora
+      when: ansible_facts['distribution'] == 'Fedora'
       block:
         - name: Packages | Install required packages
           ansible.builtin.dnf:
@@ -35,7 +37,6 @@
         - name: Packages | Remove leaf packages
           ansible.builtin.dnf:
             autoremove: true
-      when: ansible_facts['distribution'] == 'Fedora'
     - name: User Configuration
       block:
         - name: User Configuration | Add additional SSH public keys
@@ -57,6 +58,7 @@
             service: fstrim.timer
             enabled: true
     - name: System Configuration (2)
+      notify: Reboot
       block:
         - name: System Configuration (2) | Enable kernel modules now
           community.general.modprobe:
@@ -69,7 +71,7 @@
             content: "{{ item }}"
             dest: "/etc/modules-load.d/{{ item }}.conf"
           loop: [br_netfilter, overlay, rbd]
-        - name: System Configuration (2) | Set sysctls
+        - name: System Configuration (2) | Tune sysctls
           ansible.posix.sysctl:
             name: "{{ item.key }}"
             value: "{{ item.value }}"
@@ -97,12 +99,64 @@
           when:
             - ansible_facts['distribution'] == 'Ubuntu'
             - ansible_swaptotal_mb > 0
-        - name: System Configuration (2) | Permissive SELinux | Fedora
-          ansible.posix.selinux:
-            state: permissive
-            policy: targeted
-          when: ansible_facts['distribution'] == 'Fedora'
-      notify: Reboot
+        # ? Don't (vv srs)
+        # - name: System Configuration (2) | Permissive SELinux | Fedora
+        #   ansible.posix.selinux:
+        #     state: permissive
+        #     policy: targeted
+        #   when: ansible_facts['distribution'] == 'Fedora'
+    - name: System Configuration (3)
+      when: k3s_control_node
+      block:
+        - name: System Configuration (3) | HA Proxy | Install software
+          ansible.builtin.dnf:
+            name: [keepalived, haproxy]
+            state: present
+        - name: System Configuration (3) | HA Proxy | Tune sysctls
+          ansible.posix.sysctl:
+            name: "{{ item.key }}"
+            value: "{{ item.value }}"
+            sysctl_file: /etc/sysctl.d/99-haproxy.conf
+            reload: true
+          with_dict: "{{ sysctl_config }}"
+          vars:
+            sysctl_config:
+              net.ipv4.ip_nonlocal_bind: 1
+              net.ipv6.ip_nonlocal_bind: 1
+        - name: System Configuration (3) | HA Proxy | Tune Selinux Bools
+          ansible.builtin.shell: |
+            if [[ "$(getsebool haproxy_connect_any | grep 'off$' -q; echo $?)" == 0 ]]; then
+              #? if 'off', set bool
+              setsebool -P haproxy_connect_any=1
+              echo "changed"; exit
+            fi
+            echo "unchanged"; exit
+          register: haproxy_sebool
+          changed_when: haproxy_sebool.stdout == "changed"
+        - name: System Configuration (3) | HA Proxy | Get control-plane nodes
+          ansible.builtin.set_fact:
+            kube_api_nodes: "{{ hostvars | dict2items | json_query(jmes_query_kube_api_nodes) }}"
+          vars:
+            jmes_query_kube_api_nodes: "[?value.group_names[?contains(@, 'master') == `true`]].[key,value]"
+        # This probably isnt DRY enough
+        - name: System configuration (3) | HA Proxy | Install configuration
+          notify: Reboot
+          ansible.builtin.template:
+            src: "{{ item.key }}"
+            dest: "{{ item.value }}"
+            owner: root
+            mode: 0644
+          with_dict: "{{ ha_config_files }}"
+          vars:
+            ha_config_files:
+              haproxy.cfg.j2: /etc/haproxy/haproxy.cfg
+              keepalived.conf.j2: /etc/keepalived/keepalived.conf
+        - name: System configuration (3) | HA Proxy | Enable services
+          ansible.builtin.systemd:
+            name: "{{ item }}"
+            state: started
+            enabled: true
+          with_items: ['keepalived', 'haproxy']
 
   handlers:
     - name: Reboot
