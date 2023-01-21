@@ -5,9 +5,9 @@ metadata:
   namespace: flux-system
   name: cluster-settings
 data:
-  NET_NODE_CIDR: "192.168.42.0/24"
+  NET_NODE_CIDR: "172.20.0.0/25"
   NET_POD_CIDR: "10.42.0.0/16"
   NET_SVC_CIDR: "10.43.0.0/16"
-  NET_EIP_CIDR: "192.168.69.0/24"
-  SVC_NGINX_ADDR: "192.168.69.101"
-  SVC_SYSLOG_ADDR: "192.168.69.111"
+  NET_EIP_CIDR: "172.21.0.0/16"
+  SVC_NGINX_ADDR: "172.21.0.0"
+  SVC_SYSLOG_ADDR: "172.21.0.50"
