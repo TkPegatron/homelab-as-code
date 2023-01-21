@@ -7,6 +7,9 @@ spec:
   registry: quay.io
   imagePath: calico
   calicoNetwork:
+    bgp: Enabled
+    hostPorts: Disabled
+    linuxDataplane: BPF
     # Note: The ipPools section cannot be modified post-install.
     ipPools:
       - blockSize: 26

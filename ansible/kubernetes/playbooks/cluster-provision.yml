@@ -21,7 +21,7 @@
       ansible.builtin.set_fact:
         k3s_server_manifests_templates: []
         k3s_server_manifests_urls: []
-      when: k3s_check_installed.stat.exists
+      when: k3s_check_installed.stat.exists | default(true)
 
     - name: Create the k3s data directory
       ansible.builtin.file:

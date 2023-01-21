@@ -6,11 +6,11 @@ creation_rules:
       - pgp:
           - 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
         age:
-          - age16atsrnff28efjkx3c5hmy88gwgwv5cpma0xkyjjw95vcw8kstp9sf4lf7w
-  - path_regex: cluster/.*\.sops\.ya?ml
+          - age1ghh53ja2rkyvwc29sxzrz9d9t0f5g0qvkcd9wuem5h2tld5wtyfs8ewz9x
+  - path_regex: kubernetes/.*\.sops\.ya?ml
     encrypted_regex: "^(data|stringData)$"
     key_groups:
       - pgp:
           - 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
         age:
-          - age16atsrnff28efjkx3c5hmy88gwgwv5cpma0xkyjjw95vcw8kstp9sf4lf7w
+          - age1ghh53ja2rkyvwc29sxzrz9d9t0f5g0qvkcd9wuem5h2tld5wtyfs8ewz9x
