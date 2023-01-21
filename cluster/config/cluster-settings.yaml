@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cluster-settings
-  namespace: flux-system
-data:
-  TIMEZONE: "America/Detroit"
-  METALLB_HTTP_INGRESS_ADDR: 172.21.0.1

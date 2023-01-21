@@ -1,13 +1,16 @@
 {
   "recommendations": [
-      "HashiCorp.terraform",
+      "aaron-bond.better-comments",
       "britesnow.vscode-toggle-quotes",
+      "eamodio.gitlens",
+      "HashiCorp.terraform",
+      "mhutchie.git-graph",
       "mitchdenny.ecdc",
       "ms-kubernetes-tools.vscode-kubernetes-tools",
       "oderwat.indent-rainbow",
+      "omBratteng.nftables",
       "redhat.ansible",
       "signageos.signageos-vscode-sops",
       "usernamehw.errorlens",
-      "fcrespo82.markdown-table-formatter"
   ]
 }
