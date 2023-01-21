@@ -5,4 +5,36 @@ metadata:
     name: sops-age
     namespace: flux-system
 stringData:
-    age.agekey: {{ SOPS_AGE_PRIVATE_KEY }}
+    age.agekey: ENC[AES256_GCM,data:Rirx7kbCsGF5Urj7Y3qtau4KINV2ia5KGPFzsGKN+uJtxDPXmgsSW03twqqw1KD+jGW0YHR8FSmSsC3clpGVfGI7BLQG+T7zDdLgKbEl0moQHPbdCBTYmVbx/w7NtEQltf1hZ9PYtIIR+XWpqZYSOUgaesdW49XzKW9jA7rhOR38lFhfTFQOgvxZsY5VaCpqPE0OPA2R1zBNYZwHpYQmlz9hW7IJTzyKoHIgS1U7g0A0z7HHuwEavVFhzSW5,iv:Ww3pTc+l3AhCGkTM8mKkcvbhAyQ+OT15/hfs2zp6rM8=,tag:fLVMqbnF8WzquLe5lYSD/g==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1ghh53ja2rkyvwc29sxzrz9d9t0f5g0qvkcd9wuem5h2tld5wtyfs8ewz9x
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB5dXF2Q241N2IzTXhJNS9i
+            bXYxeVhjUzIrUGpWb2J0dFhRRnI0WFY3RGdBCmJ4eVFrdEhYTzBPeDFTRTYzbWt4
+            WnN4cHBmZ05RbGlJQ0ppUml1OURNRkkKLS0tIGVQYXNEY2NuVGtyZ1phNEZyeHAz
+            WUhiZXhwT3dDcUp3dFdIbGNrWTQxTHMKP+Eef8ll9yLPMkfUCu7AD9rK3RvijXKH
+            C3mnAuimxSjK/kwrcmmEeRt8NgdZYHfmXBuTwio4/Ax6JcOT2YSmEw==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2023-01-21T13:06:25Z"
+    mac: ENC[AES256_GCM,data:CF1zkMmWsl/buFmCqwHEjtuV9tGH0GtuO6ANSuA/IYz6Q9pRXaz2mlga5z3yAz0KLFLOpyUGSij/jXCL10zpctVxAP0zvdvvyn2ts16FqqQJ+V64BP4OdfWKP758EmeRCQ1SdHFWlb2Lan1wUKP6pGzjNtEOuob9tpBAR4Pp4ng=,iv:A5ry1wNBhtewLhesM5Cfe/KKvWfc4CuTk4pSnf/V7Bc=,tag:3GNCdvOtDFQ8hkvW75FL6A==,type:str]
+    pgp:
+        - created_at: "2023-01-21T13:06:24Z"
+          enc: |
+            -----BEGIN PGP MESSAGE-----
+
+            hF4DuBz7K6VE7cMSAQdA4KvW8A1Mo2HO7f9xElqyLTcB4uun20NfldrnuJdgYjUw
+            /uAObWQRl3PDeuyZsKO4j/OcOSVtdmaNhVKb3xr5Wa0T5KruKu+bEe5DvZANQgfl
+            0o0BLuTh0uwt9O0VuZkYonSjIJzBoYqkXLZiVLJ/CxZeFZSIn4a2cYXC04/mTr3w
+            NATc7xxHfxw7Yc/phGt5eh3eLkGoHsdAQZ0Sr6P/Jlzm6+W1jy424C3UYXA+xYYA
+            m0aFHst9fXvvqkXeoM3oJ07PUxvR1LdcjkMlCtalINin8aIhy6/2yuo6tXsKAc4=
+            =Cdmy
+            -----END PGP MESSAGE-----
+          fp: 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
+    encrypted_regex: ^(data|stringData)$
+    version: 3.7.3
