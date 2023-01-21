@@ -39,3 +39,6 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ directory_contents.files }}"
+
+
+# TODO: Remove HAProxy
