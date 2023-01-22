@@ -157,6 +157,31 @@
             state: started
             enabled: true
           with_items: ['keepalived', 'haproxy']
+    - name: System Configuration (4) | Network Bound Disk Encryption
+      block:
+        - name: System Configuration (4) | NBDE | Rotate LUKS Keys
+          loop: "{{ nbde_client_bindings }}"
+          no_log: true
+          register: luks_rotate_shell
+          changed_when: luks_rotate_shell.stdout == "changed"
+          ansible.builtin.shell:
+            cmd: |
+              if ! ((echo "{{ item.encryption_password }}") | cryptsetup --verbose open --test-passphrase {{ item.device }}); then
+                cryptsetup luksKillSlot {{ item.device }} {{ item.slot }} || true
+                printf "{{ item.encryption_password }}" > ./new_passphrase
+                printf "{{ luks_admin_password }}" > ./admin_passphrase
+                cryptsetup luksAddKey \
+                  --key-file ./admin_passphrase \
+                  --key-slot={{ item.slot }} \
+                  {{ item.device }} ./new_passphrase
+                rm ./new_passphrase ./admin_passphrase
+                echo "changed"; exit
+              fi
+              echo "unchanged"; exit
+        - name: System Configuration (4) | NBDE | Execute Client Role
+          ansible.builtin.include_role:
+            name: linux-system-roles.nbde_client
+            public: true
 
   handlers:
     - name: Reboot
