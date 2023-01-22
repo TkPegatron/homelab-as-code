@@ -27,7 +27,7 @@ spec:
     keepHistory: false
   values:
     monitoring:
-      enabled: true
+      enabled: false
       createPrometheusRules: true
     ingress:
       dashboard:
