@@ -43,6 +43,8 @@ spec:
       namespaceSelector:
         matchNames:
           - default
+          - networking
+          - rook-ceph
     ingress:
       main:
         enabled: true
