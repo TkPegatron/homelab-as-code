@@ -33,10 +33,11 @@ spec:
       mon:
         requests:
           cpu: 100m
-          memory: 1Gi
-        limits:
-          cpu: "2000m"
-          memory: "2Gi"
+          memory: 300M
+      logcollector:
+        requests:
+          cpu: 100m
+          memory: 30M
     ingress:
       dashboard:
         ingressClassName: nginx
