@@ -45,6 +45,7 @@ spec:
           - default
           - networking
           - rook-ceph
+          - longhorn-system
     ingress:
       main:
         enabled: true
