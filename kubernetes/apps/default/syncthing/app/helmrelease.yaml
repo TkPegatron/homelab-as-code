@@ -44,6 +44,7 @@ spec:
             port: 8384
       transfer: #! Trans :P
         type: LoadBalancer
+        externalIPs: ["${SVC_SYNCTHING_ADDR}"]
         ports:
           tcp-transfer:
             port: 22000
@@ -54,6 +55,7 @@ spec:
             protocol: UDP
       discovery:
         type: LoadBalancer
+        externalIPs: ["${SVC_SYNCTHING_ADDR}"]
         ports:
           udp:
             port: 21027
