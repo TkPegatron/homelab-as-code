@@ -38,6 +38,11 @@ spec:
           secretKeyRef:
             name: vaultwarden-secret
             key: admin-token
+    service:
+      main:
+        ports:
+          http:
+            port: 80
     ingress:
       main:
         enabled: true
