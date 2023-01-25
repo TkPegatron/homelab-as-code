@@ -9,3 +9,4 @@ resources:
   # Flux-Kustomizations
   - ./hajimari/ks.yaml
   - ./syncthing/ks.yaml
+  - ./vaultwarden/ks.yaml
