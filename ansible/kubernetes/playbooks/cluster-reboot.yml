@@ -12,5 +12,5 @@
   tasks:
     - name: Reboot
       ansible.builtin.reboot:
-        msg: Rebooting nodes
+        msg: ANSIBLE is Rebooting KubeAPI Nodes
         reboot_timeout: 3600

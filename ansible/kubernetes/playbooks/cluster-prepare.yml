@@ -178,6 +178,8 @@
                 echo "changed"; exit
               fi
               echo "unchanged"; exit
+        # If this starts to fail you may need to purge the tokens from the headder
+        #  for i in {0..6}; do sudo cryptsetup token remove --token-id $i /dev/sda3 ;done
         - name: System Configuration (4) | NBDE | Execute Client Role
           ansible.builtin.include_role:
             name: linux-system-roles.nbde_client
