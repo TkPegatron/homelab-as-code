@@ -7,7 +7,7 @@ global_defs {
 }
 
 vrrp_script chk_haproxy {
-  script "pgrep haproxy"
+  script "nc -z -v localhost 6443 &>/dev/null && pgrep haproxy"
   interval 2
   weight 2
 }

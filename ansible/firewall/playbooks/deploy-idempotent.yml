@@ -1,0 +1,124 @@
+- name: "Firewall | Deploy system"
+  hosts:
+    - firewall
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  tasks:
+    - name: System Configuration | HA Proxy | Install software
+      ansible.builtin.dnf:
+        name: haproxy
+        state: present
+    - name: System Configuration | HA Proxy | Tune sysctls
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-haproxy.conf
+        reload: true
+      with_dict: "{{ sysctl_config }}"
+      vars:
+        sysctl_config:
+          net.ipv4.ip_nonlocal_bind: 1
+          net.ipv6.ip_nonlocal_bind: 1
+    - name: System Configuration | HA Proxy | Tune Selinux Bools
+      ansible.builtin.shell: |
+        set -eo pipefail
+        if [[ "$(getsebool haproxy_connect_any | grep 'off$' -q; echo $?)" == 0 ]]; then
+          #? if 'off', set bool
+          setsebool -P haproxy_connect_any=1
+          echo "changed"; exit
+        fi
+        echo "unchanged"; exit
+      register: haproxy_sebool
+      changed_when: haproxy_sebool.stdout == "changed"
+    - name: System configuration | HA Proxy | Install configuration
+      notify: haproxy
+      ansible.builtin.template:
+        src: haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: root
+        mode: 0644
+
+  handlers:
+    - name: Systemd | Reconfigurue and Restart | HAProxy
+      ansible.builtin.systemd:
+        name: 'haproxy'
+        state: restarted
+        enabled: true
+      listen: haproxy
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#    - name: Locale
+#      block:
+#        - name: Locale | Set timezone
+#          community.general.timezone:
+#            name: "{{ timezone | default('Etc/UTC') }}"
+#        - name: Networking | Update /etc/hosts to include inventory hostname
+#          ansible.builtin.blockinfile:
+#            path: /etc/hosts
+#            block: |
+#              127.0.1.1   {{ inventory_hostname }}
+#    - name: Packages | Fedora
+#      when: ansible_facts['distribution'] == 'Fedora'
+#      block:
+#        - name: Packages | Install required packages
+#          ansible.builtin.dnf:
+#            name: "{{ fedora.packages | default([]) }}"
+#            state: present
+#            update_cache: true
+#        - name: Packages | Remove leaf packages
+#          ansible.builtin.dnf:
+#            autoremove: true
+#    - name: DHCP Server
+#      block:
+#        - name: DHCP Server | Template configuration
+#          ansible.builtin.template:
+#            src: templates/dhcpd.conf.j2
+#            dest: /etc/dhcp/dhcpd.conf
+#            owner: root
+#            mode: 0644
+#          notify: "dhcpd"
+#    - name: BGP Routing Daemon | BIRD
+#      block:
+#        - name: BGP Routing Daemon | BIRD | Template Configuration
+#          ansible.builtin.template:
+#            src: 'bird.conf.j2'
+#            dest: '/etc/bird.conf'
+#            mode: 0640
+#            owner: root
+#            group: bird
+#            validate: /usr/sbin/bird -p -c %s
+#          notify: "restart bird"
+#  handlers:
+#    - name: Reboot
+#      ansible.builtin.reboot:
+#        msg: Rebooting nodes
+#        reboot_timeout: 3600
+#    - name: Restart and enable dhcpd systemd service
+#      ansible.builtin.systemd:
+#        name: dhcpd.service
+#        state: restarted
+#        daemon_reload: true
+#        enabled: true
+#      listen: "dhcpd"
+#      become: true
+#    - name: Restart and enable bird systemd service
+#      ansible.builtin.service:
+#        name: bird.service
+#        state: restarted
+#        enabled: true
+#      listen: "bird"
+#      become: true
+#

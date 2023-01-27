@@ -1,0 +1,44 @@
+# --- { Default settings } --- #
+
+default-lease-time {{ dhcp_min_lease }};
+{% if dhcp_max_lease is defined %}
+max-lease-time {{ dhcp_max_lease }};
+{% endif %}
+
+# -{This server should be authoritative}
+authoritative;
+
+# --- { Class definitions } --- #
+
+class "ubnt" {
+  match if substring (option vendor-class-identifier, 0, 4) = "ubnt";
+  option vendor-class-identifier "ubnt";
+  vendor-option-space ubnt;
+}
+
+# --- { DHCP Scopes } --- #
+
+{% for scope in dhcp_scopes %}
+subnet {{ scope.cidr | ansible.utils.ipaddr('network') }} netmask {{ scope.cidr | ansible.utils.ipaddr('netmask') }} {
+{%  if scope.description is defined %}
+  # -{ {{ scope.description }} }
+{%  endif %}
+  range {{ scope.range }};
+  option routers {{ scope.gateway_addr }};
+  option domain-name-servers {{ ', '.join(scope.dns_servers) }};
+{%  if scope.unifi_controler is defined %}
+  option ubnt.unifi-address {{ scope.unifi_controler }};
+{%  endif %}
+}
+
+{% endfor %}
+# --- { Static Assignments } --- #
+
+{% for host in dhcp_statics %}
+host {{ host.hostname.split('.')[0] }} {
+  hardware ethernet {{ host.mac_addr }};
+  fixed-address {{ host.ip_addr }};
+  option host-name "{{ host.hostname }}";
+}
+
+{% endfor %}
