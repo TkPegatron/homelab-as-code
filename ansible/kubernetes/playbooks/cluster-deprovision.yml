@@ -39,6 +39,9 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ directory_contents.files }}"
+#    - name: Reset Rook Partition
+#      ansible.builtin.shell:
+#        cmd: dd if=/dev/zero of=/dev/cryptroot/rook bs=40M count=1 status=progress
 
 
 # TODO: Remove HAProxy

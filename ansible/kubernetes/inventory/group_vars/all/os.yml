@@ -3,7 +3,10 @@
 timezone: America/Detroit
 
 # (list) Additional ssh public keys to add to the nodes
-# ssh_authorized_keys:
+ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv"
+
+ansible_ssh_private_key_file: ansible/files/private_keys/ansible-ssh-ed25519
+ansible_user: ansible
 
 fedora:
   packages:
@@ -19,6 +22,8 @@ fedora:
     - python3-kubernetes
     - python3-libselinux
     - python3-pyyaml
+    - iscsi-initiator-utils
+    - libiscsi
 
 ubuntu:
   packages:

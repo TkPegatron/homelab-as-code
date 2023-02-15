@@ -39,6 +39,13 @@
             autoremove: true
     - name: User Configuration
       block:
+        - name: User Configuration | Allow user to sudo without password
+          ansible.builtin.copy:
+            content: "{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL"
+            dest: "/etc/sudoers.d/{{ ansible_user }}"
+            mode: 0644
+            owner: root
+            group: root
         - name: User Configuration | Add additional SSH public keys
           ansible.posix.authorized_key:
             user: "{{ ansible_user }}"
@@ -105,61 +112,61 @@
         #     state: permissive
         #     policy: targeted
         #   when: ansible_facts['distribution'] == 'Fedora'
-    - name: System Configuration (3)
-      when: k3s_control_node
+    # - name: System Configuration (3)
+    #   when: k3s_control_node
+    #   block:
+    #     - name: System Configuration (3) | HA Proxy | Install software
+    #       ansible.builtin.dnf:
+    #         name: [keepalived, haproxy]
+    #         state: present
+    #     - name: System Configuration (3) | HA Proxy | Tune sysctls
+    #       ansible.posix.sysctl:
+    #         name: "{{ item.key }}"
+    #         value: "{{ item.value }}"
+    #         sysctl_file: /etc/sysctl.d/99-haproxy.conf
+    #         reload: true
+    #       with_dict: "{{ sysctl_config }}"
+    #       vars:
+    #         sysctl_config:
+    #           net.ipv4.ip_nonlocal_bind: 1
+    #           net.ipv6.ip_nonlocal_bind: 1
+    #     - name: System Configuration (3) | HA Proxy | Tune Selinux Bools
+    #       ansible.builtin.shell: |
+    #         if [[ "$(getsebool haproxy_connect_any | grep 'off$' -q; echo $?)" == 0 ]]; then
+    #           #? if 'off', set bool
+    #           setsebool -P haproxy_connect_any=1
+    #           echo "changed"; exit
+    #         fi
+    #         echo "unchanged"; exit
+    #       register: haproxy_sebool
+    #       changed_when: haproxy_sebool.stdout == "changed"
+    #     - name: System Configuration (3) | HA Proxy | Get control-plane nodes
+    #       ansible.builtin.set_fact:
+    #         kube_api_nodes: "{{ hostvars | dict2items | json_query(jmes_query_kube_api_nodes) }}"
+    #       vars:
+    #         jmes_query_kube_api_nodes: "[?value.group_names[?contains(@, 'master') == `true`]].[key,value]"
+    #     # This probably isnt DRY enough
+    #     - name: System configuration (3) | HA Proxy | Install configuration
+    #       notify: Reboot
+    #       ansible.builtin.template:
+    #         src: "{{ item.key }}"
+    #         dest: "{{ item.value }}"
+    #         owner: root
+    #         mode: 0644
+    #       with_dict: "{{ ha_config_files }}"
+    #       vars:
+    #         ha_config_files:
+    #           haproxy.cfg.j2: /etc/haproxy/haproxy.cfg
+    #           keepalived.conf.j2: /etc/keepalived/keepalived.conf
+    #     - name: System configuration (3) | HA Proxy | Enable services
+    #       ansible.builtin.systemd:
+    #         name: "{{ item }}"
+    #         state: started
+    #         enabled: true
+    #       with_items: ['keepalived', 'haproxy']
+    - name: System Configuration (3) | Network Bound Disk Encryption
       block:
-        - name: System Configuration (3) | HA Proxy | Install software
-          ansible.builtin.dnf:
-            name: [keepalived, haproxy]
-            state: present
-        - name: System Configuration (3) | HA Proxy | Tune sysctls
-          ansible.posix.sysctl:
-            name: "{{ item.key }}"
-            value: "{{ item.value }}"
-            sysctl_file: /etc/sysctl.d/99-haproxy.conf
-            reload: true
-          with_dict: "{{ sysctl_config }}"
-          vars:
-            sysctl_config:
-              net.ipv4.ip_nonlocal_bind: 1
-              net.ipv6.ip_nonlocal_bind: 1
-        - name: System Configuration (3) | HA Proxy | Tune Selinux Bools
-          ansible.builtin.shell: |
-            if [[ "$(getsebool haproxy_connect_any | grep 'off$' -q; echo $?)" == 0 ]]; then
-              #? if 'off', set bool
-              setsebool -P haproxy_connect_any=1
-              echo "changed"; exit
-            fi
-            echo "unchanged"; exit
-          register: haproxy_sebool
-          changed_when: haproxy_sebool.stdout == "changed"
-        - name: System Configuration (3) | HA Proxy | Get control-plane nodes
-          ansible.builtin.set_fact:
-            kube_api_nodes: "{{ hostvars | dict2items | json_query(jmes_query_kube_api_nodes) }}"
-          vars:
-            jmes_query_kube_api_nodes: "[?value.group_names[?contains(@, 'master') == `true`]].[key,value]"
-        # This probably isnt DRY enough
-        - name: System configuration (3) | HA Proxy | Install configuration
-          notify: Reboot
-          ansible.builtin.template:
-            src: "{{ item.key }}"
-            dest: "{{ item.value }}"
-            owner: root
-            mode: 0644
-          with_dict: "{{ ha_config_files }}"
-          vars:
-            ha_config_files:
-              haproxy.cfg.j2: /etc/haproxy/haproxy.cfg
-              keepalived.conf.j2: /etc/keepalived/keepalived.conf
-        - name: System configuration (3) | HA Proxy | Enable services
-          ansible.builtin.systemd:
-            name: "{{ item }}"
-            state: started
-            enabled: true
-          with_items: ['keepalived', 'haproxy']
-    - name: System Configuration (4) | Network Bound Disk Encryption
-      block:
-        - name: System Configuration (4) | NBDE | Rotate LUKS Keys
+        - name: System Configuration (3) | NBDE | Rotate LUKS Keys
           loop: "{{ nbde_client_bindings }}"
           no_log: true
           register: luks_rotate_shell
