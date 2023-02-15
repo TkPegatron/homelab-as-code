@@ -57,9 +57,8 @@ spec:
         tls:
           - hosts:
               - *host
-    volumeClaimTemplates:
-      - name: data
+    persistence:
+      data:
+        enabled: true
+        existingClaim: vaultwarden
         mountPath: /data
-        accessMode: ReadWriteOnce
-        size: 500Mi
-        storageClass: longhorn
