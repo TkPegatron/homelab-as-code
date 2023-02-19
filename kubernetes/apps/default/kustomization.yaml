@@ -8,5 +8,6 @@ resources:
   - ./namespace.yaml
   # Flux-Kustomizations
   - ./hajimari/ks.yaml
+  - ./homepage/ks.yaml
   - ./syncthing/ks.yaml
   - ./vaultwarden/ks.yaml

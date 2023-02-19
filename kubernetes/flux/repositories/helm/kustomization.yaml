@@ -1,4 +1,3 @@
-
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -8,6 +7,7 @@ resources:
   - ./calico.yaml
   - ./grafana.yaml
   - ./hajimari.yaml
+  - ./homepage.yaml
   - ./ingress-nginx.yaml
   - ./jetstack.yaml
   - ./kubernetes-dashboard.yaml
@@ -15,7 +15,6 @@ resources:
   - ./longhorn.yaml
   - ./metrics-server.yaml
   - ./prometheus-community.yaml
-  #- ./rook-ceph.yaml
+  # - ./rook-ceph.yaml
   - ./stakater.yaml
   - ./weave-gitops.yaml
-
