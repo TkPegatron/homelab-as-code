@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: &app homepage
+  namespace: default
+  labels:
+    app.kubernetes.io/name: *app
+    app.kubernetes.io/instance: *app
+  annotations:
+    reloader.stakater.com/match: "true"
+data:
+  settings.yaml: |
+    ---
+    title: Dashboard
+    theme: dark
+    color: neutral
+    layout: # key by group name in services.yaml
+      Apps & Services:
+        style: row
+        columns: 3
+    providers:
+      longhorn:
+        url: https://longhorn.zynthovian.xyz
+
+  widgets.yaml: |
+    ---
+    # - logo:
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
+        nodes:
+          show: false
+          cpu: true
+          memory: true
+          showLabel: true
+    - longhorn:
+        total: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+        focus: false
+    - openmeteo:
+        label: Toledo
+        latitude: 41.725717
+        longitude: -83.556464
+        units: metric
+        cache: 5
+
+  services.yaml: |
+    ---
+
+  bookmarks.yaml: |
+    ---
+
+  docker.yaml: |
+    ---
+
+  kubernetes.yaml: |
+    ---
+    mode: cluster
