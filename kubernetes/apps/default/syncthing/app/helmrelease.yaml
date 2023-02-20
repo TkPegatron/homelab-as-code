@@ -67,7 +67,7 @@ spec:
         annotations:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/name: "Syncthing"
-          gethomepage.dev/icon: syncthing.svg
+          gethomepage.dev/icon: syncthing
           hajimari.io/appName: "Syncthing"
           hajimari.io/icon: mdi:folder-sync
         hosts:
