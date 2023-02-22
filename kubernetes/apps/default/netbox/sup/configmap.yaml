@@ -14,7 +14,11 @@ data:
   DB_NAME: netbox
   DB_USER: netbox
   REDIS_SSL: "false"
+  REDIS_PORT: "6379"
   REDIS_HOST: netbox-redis.default.svc.cluster.local
+  REDIS_CACHE_SSL: "false"
+  REDIS_CACHE_PORT: "6378"
+  REDIS_CACHE_HOST: netbox-redis.default.svc.cluster.local
   SKIP_SUPERUSER: "false"
   METRICS_ENABLED: "false"
   WEBHOOKS_ENABLED: "true"
