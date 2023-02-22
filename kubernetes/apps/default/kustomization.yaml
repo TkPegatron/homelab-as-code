@@ -9,5 +9,6 @@ resources:
   - ./actual/ks.yaml
   - ./hajimari/ks.yaml
   - ./homepage/ks.yaml
+  - ./netbox/ks.yaml
   - ./syncthing/ks.yaml
   - ./vaultwarden/ks.yaml

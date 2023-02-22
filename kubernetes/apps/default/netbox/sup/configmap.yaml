@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netbox
+  namespace: default
+data:
+  TIME_ZONE: "${CLUSTER_TIMEZONE}"
+  CORS_ORIGIN_ALLOW_ALL: "true"
+  DB_HOST: netbox-postgres.default.svc.cluster.local
+  DB_NAME: netbox
+  DB_USER: netbox
+  REDIS_SSL: "false"
+  REDIS_HOST: netbox-redis.default.svc.cluster.local
+  SKIP_SUPERUSER: "false"
+  METRICS_ENABLED: "false"
+  WEBHOOKS_ENABLED: "true"
