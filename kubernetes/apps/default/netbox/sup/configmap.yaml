@@ -8,7 +8,7 @@ data:
   ALLOWED_HOSTS: '*'
   SUPERUSER_EMAIL: elliana.perry@gmail.com
   SUPERUSER_NAME: elliana
-  TIME_ZONE: "${CLUSTER_TIMEZONE}"
+  TIME_ZONE: "America/Detroit"
   CORS_ORIGIN_ALLOW_ALL: "true"
   DB_HOST: netbox-postgres.default.svc.cluster.local
   DB_NAME: netbox
