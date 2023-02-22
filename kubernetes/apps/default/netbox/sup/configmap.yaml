@@ -5,7 +5,7 @@ metadata:
   name: netbox
   namespace: default
 data:
-  ALLOWED_HOSTS: "['*']"
+  #ALLOWED_HOSTS: "['*']"
   TIME_ZONE: "${CLUSTER_TIMEZONE}"
   CORS_ORIGIN_ALLOW_ALL: "true"
   DB_HOST: netbox-postgres.default.svc.cluster.local
