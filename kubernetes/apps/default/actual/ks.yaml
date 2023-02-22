@@ -4,8 +4,6 @@ kind: Kustomization
 metadata:
   name: cluster-apps-actual
   namespace: flux-system
-  labels:
-    substitution.flux.home.arpa/enabled: "true"
 spec:
   prune: true
   path: ./kubernetes/apps/default/actual/app
