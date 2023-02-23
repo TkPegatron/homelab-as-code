@@ -51,6 +51,21 @@ spec:
         subPath: netbox_db
     podAnnotations:
       secret.reloader.stakater.com/reload: netbox
+    initContainers:
+      config:
+        image: docker.io/library/busybox:latest
+        env:
+          GID: "${SECURITY_CONTEXT_RUN_AS_USER}"
+          UID: "${SECURITY_CONTEXT_RUN_AS_GROUP}"
+        command:
+          - /bin/bash
+          - -c
+          - |
+            echo "Changing directory ownership..."
+            chown 1009:1009 /mnt/netbox_db
+        volumeMounts:
+          - name: data
+            mountPath: /mnt/
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
