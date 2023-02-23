@@ -58,7 +58,7 @@ spec:
           GID: "${SECURITY_CONTEXT_RUN_AS_USER}"
           UID: "${SECURITY_CONTEXT_RUN_AS_GROUP}"
         command:
-          - /bin/bash
+          - /bin/sh
           - -c
           - |
             echo "Changing directory ownership..."
