@@ -122,14 +122,11 @@ spec:
             enabled: true
             protocol: TCP
             port: 6378
-      cache:
     podAnnotations:
       secret.reloader.stakater.com/reload: netbox
     additionalContainers:
       cache:
-        image:
-          repository: docker.io/library/redis
-          tag: 7.0.8-alpine
+        image: docker.io/library/redis:7.0.8-alpine
         command: ["sh", "-c", "redis-server", "--port", "6378", "--requirepass", "$REDIS_CACHE_PASSWORD"]
         env:
           REDIS_CACHE_PASSWORD:
