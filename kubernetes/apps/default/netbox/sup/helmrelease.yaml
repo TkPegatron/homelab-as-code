@@ -96,7 +96,7 @@ spec:
     image:
       repository: docker.io/library/redis
       tag: "7.0.8-alpine"
-    command: ["redis-server", "--appendonly", "yes", "--port", "6379", "--requirepass", "$REDIS_PASSWORD"]
+    command: ["/bin/sh", "-c", "redis-server --appendonly yes --port 6379 --requirepass $REDIS_PASSWORD"]
     env:
       REDIS_REPLICATION_MODE: master
       REDIS_PASSWORD:
@@ -128,7 +128,7 @@ spec:
     additionalContainers:
       cache:
         image: docker.io/library/redis:7.0.8-alpine
-        command: ["redis-server", "--port", "6378", "--requirepass", "$REDIS_CACHE_PASSWORD"]
+        command: ["/bin/sh", "-c", "redis-server --port 6378 --requirepass $REDIS_CACHE_PASSWORD"]
         env:
           REDIS_CACHE_PASSWORD:
             valueFrom:
