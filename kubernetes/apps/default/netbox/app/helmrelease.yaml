@@ -52,6 +52,9 @@ spec:
             mountPath: /etc/netbox
           - path: netbox/media
             mountPath: /opt/netbox/netbox/media
+          - name: data
+            path: netbox/unit
+            mountPath: /opt/unit/
     service:
       main:
         ports:
@@ -82,6 +85,9 @@ spec:
               name: *app
           - configMapRef:
               name: *app
+        env:
+          GID: "${SECURITY_CONTEXT_RUN_AS_USER}"
+          UID: "${SECURITY_CONTEXT_RUN_AS_GROUP}"
         command:
           - /bin/bash
           - -c
@@ -90,6 +96,8 @@ spec:
               echo "Copying netbox configuration resources"
               cp -vr /etc/netbox/config/ /mnt/etc/netbox/
             fi
+            mkdir -vp /mnt/opt/unit/tmp /mnt/opt/unit/state
+            chown -Rv $UID:$GID /mnt/opt/unit
             echo "Initcontainer completed"
         volumeMounts:
           - name: data
@@ -98,6 +106,9 @@ spec:
           - name: data
             subPath: netbox/media
             mountPath: /mnt/opt/netbox/netbox/media
+          - name: data
+            subPath: netbox/unit
+            mountPath: /mnt/opt/unit
     additionalContainers:
       worker:
         image: docker.io/netboxcommunity/netbox:latest
@@ -117,6 +128,9 @@ spec:
           - name: data
             subPath: netbox/media
             mountPath: /opt/netbox/netbox/media
+          - name: data
+            subPath: netbox/unit
+            mountPath: /opt/unit/
       housekeeping:
         image: docker.io/netboxcommunity/netbox:latest
         envFrom:
@@ -132,3 +146,6 @@ spec:
           - name: data
             subPath: netbox/media
             mountPath: /opt/netbox/netbox/media
+          - name: data
+            subPath: netbox/unit
+            mountPath: /opt/unit/
