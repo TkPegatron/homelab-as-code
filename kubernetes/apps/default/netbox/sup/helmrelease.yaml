@@ -61,8 +61,9 @@ spec:
           - /bin/sh
           - -c
           - |
-            echo "Changing directory ownership..."
-            chown 1009:1009 /mnt/netbox_db
+            echo "Initializing files..."
+            mkdir -v /mnt/netbox_db
+            chown -v $UID:$GID /mnt/netbox_db
         volumeMounts:
           - name: data
             mountPath: /mnt/
