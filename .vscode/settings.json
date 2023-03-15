@@ -1,18 +1,31 @@
 {
   "ansible.ansibleLint.arguments": "-c .github/linters/.ansible-lint",
   "files.associations": {
-      "*.json5": "jsonc",
-      "**/provision/ansible/**/*.yml": "ansible",
-      "**/provision/ansible/**/*.sops.yml": "yaml",
-      "**/provision/ansible/**/inventory/**/*.yml": "yaml",
-      "**/provision/terraform/**/*.tf": "terraform"
+    "*.json5": "jsonc",
+    "**/ansible/**/*.yml": "ansible",
+    "**/ansible/**/*.sops.yml": "yaml",
+    "**/ansible/**/inventory/**/*.yml": "yaml",
+    "**/terraform/**/*.tf": "terraform",
+    "**/kubernetes/**/*.sops.toml": "plaintext",
+    "**/kubernetes/**/*.yaml": "yaml",
+    //Single file targets
+    "**/kubernetes/apps/default/coredns/app/files/zynthovian.xyz.db": "zone",
   },
-  "prettier.configPath": ".github/linters/.prettierrc.yaml",
-  "prettier.ignorePath": ".github/linters/.prettierignore",
+  "material-icon-theme.folders.associations": {
+    ".taskfiles": "utils",
+    "repositories": "database",
+    "charts": "kubernetes",
+    "helm": "kubernetes",
+  },
+  "yaml.schemaStore.enable": true,
   "yaml.schemas": {
-      "Kubernetes": "cluster/*.yaml"
+    "ansible": "ansible/**/*.yml",
+    "kubernetes": "kubernetes/**/*.yaml"
   },
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs":"active",
-  "editor.hover.delay": 1500
+  "editor.guides.bracketPairsHorizontal": true,
+  "editor.guides.highlightActiveBracketPair": true,
+  "editor.hover.delay": 1500,
+  "files.trimTrailingWhitespace": true
 }
