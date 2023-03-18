@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./bjw-s.yaml
   - ./calico.yaml
+  - ./cloudnative-pg.yaml
   - ./grafana.yaml
   - ./hajimari.yaml
   - ./homepage.yaml

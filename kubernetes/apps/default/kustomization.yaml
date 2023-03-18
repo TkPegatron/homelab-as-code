@@ -7,6 +7,7 @@ resources:
   - ./namespace.yaml
   # Flux-Kustomizations
   - ./actual/ks.yaml
+  - ./cloudnative-pg/ks.yaml
   - ./hajimari/ks.yaml
   - ./homepage/ks.yaml
   - ./netbox/ks.yaml
