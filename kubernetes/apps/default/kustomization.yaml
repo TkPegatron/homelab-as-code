@@ -13,3 +13,4 @@ resources:
   - ./netbox/ks.yaml
   - ./syncthing/ks.yaml
   - ./vaultwarden/ks.yaml
+  - ./wikijs/ks.yaml
