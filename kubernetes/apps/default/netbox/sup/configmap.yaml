@@ -10,7 +10,7 @@ data:
   SUPERUSER_NAME: elliana
   TIME_ZONE: "America/Detroit"
   CORS_ORIGIN_ALLOW_ALL: "true"
-  DB_HOST: netbox-postgres.default.svc.cluster.local
+  DB_HOST: postgres-rw.default.svc.cluster.local
   DB_NAME: netbox
   DB_USER: netbox
   REDIS_SSL: "false"
