@@ -8,6 +8,7 @@ resources:
   # Flux-Kustomizations
   - ./actual/ks.yaml
   - ./cloudnative-pg/ks.yaml
+  - ./glauth/ks.yaml
   - ./hajimari/ks.yaml
   - ./homepage/ks.yaml
   - ./netbox/ks.yaml
