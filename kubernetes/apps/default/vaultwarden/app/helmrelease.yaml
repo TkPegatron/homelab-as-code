@@ -27,7 +27,7 @@ spec:
   values:
     image:
       repository: docker.io/vaultwarden/server
-      tag: 1.27.0-alpine
+      tag: 1.28.1-alpine
     env:
       TZ: America/Detroit
       SIGNUPS_ALLOWED: "false"
