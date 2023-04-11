@@ -1,64 +1,35 @@
-
-  
 <div align="center">
 
 <img src="https://camo.githubusercontent.com/5b298bf6b0596795602bd771c5bddbb963e83e0f/68747470733a2f2f692e696d6775722e636f6d2f7031527a586a512e706e67" align="center" width="144px" height="144px"/>
 
-### My home operations repository :octocat:
-
 </div>
 
-**Note**: Project is preparing for a cluster rebuild and presentation for a group of savy friends.
+## 📖 Overview
 
-This lab environment hosts a personal kubernetes cluster and self-engineered linux firewall.
+This is a mono repository for my home infrastructure and Kubernetes cluster based on the wonderful work of the k8s@home community.
 
-The cluster is used to host a collection of personal cloud services such as a password manager, relational spreadsheet system, various media services, file-based synchronization, and centralized authentication.
+Shout out to k8s@home, you can find the template this repo is mimicking here: [onedr0p/flux-cluster-template](https://github.com/onedr0p/flux-cluster-template)
 
-My major goal with this repo is to learn both Linux system administration and engineering as well as kubernetes while also fostering infrastructure as code and ops skills.
+## 🛡️ Firewall
 
-More in-depth documentation, including drawio diagrams can be found in [./docs](./docs).
+Included in this repository is a set of playbooks designed to configure a firewall running Alma-Linux on a rasberry pi 4b.
 
-## 📂 Repository structure
+### Core Components
 
-The Git repository contains the following directories under `cluster` and are ordered below by how Flux will apply them.
+- Netfilter: The linux firewall, filters packets and performs NA[P]T.
+- Pihole: Internal DNS and adblocker
 
-```sh
-📁 cluster      # k8s cluster defined as code
-├─📁 flux       # flux, gitops operator, loaded before everything
-├─📁 crds       # custom resources, loaded before 📁 core and 📁 apps
-├─📁 charts     # helm repos, loaded before 📁 core and 📁 apps
-├─📁 config     # cluster config, loaded before 📁 core and 📁 apps
-├─📁 core       # crucial apps, namespaced dir tree, loaded before 📁 apps
-└─📁 apps       # regular apps, namespaced dir tree, loaded last
-```
+## ⛃ Network Storage
 
-### Provisioning steps
+## ⛵ Kubernetes
 
-If we are building a new cluster we need to create an age key
-age-keygen -o age.agekey
+My cluster is [k3s](https://k3s.io/) provisioned overtop bare-metal Fedora Server using the [Ansible](https://www.ansible.com/) galaxy role [ansible-role-k3s](https://github.com/PyratLabs/ansible-role-k3s). This is a semi hyper-converged cluster, workloads and block storage are sharing the same available resources on my nodes while I have a separate server for (NFS/S3) file storage.
 
-cd provision/ansible
-source ~/.local/lib/python-venv/ansible/bin/activate
-ansible-playbook playbooks/k3s.deploy.yaml
-kubectl create namespace flux-system --dry-run=client -o yaml | kubectl apply -f -
-kubectl create secret generic sops-age --namespace=flux-system --from-file=age.agekey=files/private_keys/fluxcd-age-key
-helm template cilium cilium/cilium --namespace kube-system -f roles/k3s.kubernetes/templates/cilium/values.yaml > /tmp/cillium-manifest.yaml
-kubectl apply -f /tmp/cilium-bgp-configmap.yaml
-kubectl apply -f /tmp/cillium-manifest.yaml
-export GITHUB_TOKEN=${github_token}
-flux bootstrap github --owner=tkpegatron --repository=homelab-as-code --branch=main --path=./cluster/flux --personal
+### Core Components
 
-### TODO
-
-- Ensure that requisite services are started and enabled regardless of configuration changes
-
-- https://github.com/FiloSottile/age
-
-## MISC
-
-
-## Applications
-
-### Vaultwarden
-
-This command can be used to generate an admin token: `openssl rand -base64 48`
+- [calico](https://github.com/projectcalico/calico): Internal Kubernetes networking plugin.
+- [cert-manager](https://cert-manager.io/docs/): Creates SSL certificates for services in my Kubernetes cluster.
+- [ingress-nginx](https://github.com/kubernetes/ingress-nginx/): Ingress controller to expose HTTP traffic to pods over DNS.
+- [longhorn](https://longhorn.io/docs/): Distributed block storage for persistent volumes.
+- [sops](https://toolkit.fluxcd.io/guides/mozilla-sops/): Managed secrets for Kubernetes, Ansible and Terraform which are commited to Git.
+- [volsync](https://github.com/backube/volsync) and [snapscheduler](https://github.com/backube/snapscheduler): Backup and recovery of persistent volume claims.
