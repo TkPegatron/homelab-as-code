@@ -27,7 +27,7 @@ spec:
       strategy: RollingUpdate
     image:
       repository: docker.io/library/redis
-      tag: "7.0.8-alpine"
+      tag: "7.0.10-alpine"
     command: ["/bin/sh", "-c", "redis-server --appendonly yes --port 6379 --requirepass $REDIS_PASSWORD"]
     env:
       REDIS_REPLICATION_MODE: master
@@ -59,7 +59,7 @@ spec:
       secret.reloader.stakater.com/reload: netbox
     additionalContainers:
       cache:
-        image: docker.io/library/redis:7.0.8-alpine
+        image: docker.io/library/redis:7.0.10-alpine
         command: ["/bin/sh", "-c", "redis-server --port 6378 --requirepass $REDIS_CACHE_PASSWORD"]
         env:
           REDIS_CACHE_PASSWORD:
