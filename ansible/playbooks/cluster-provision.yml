@@ -33,7 +33,7 @@
 
     - name: Copy audit-policy.yaml
       ansible.builtin.template:
-        src: ../../teplates/audit-policy.yaml.j2
+        src: "{{ playbook_dir }}/../templates/kubernetes/audit-policy.yaml.j2"
         dest: /var/lib/rancher/k3s/audit-policy.yaml
         mode: 0755
 
@@ -48,7 +48,7 @@
       run_once: true
       ansible.builtin.fetch:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ playbook_dir }}/../../../ansible/kubernetes/kubeconfig"
+        dest: "{{ playbook_dir }}/../../private_keys/kubeconfig"
         flat: true
       when:
         - k3s_control_node is defined
@@ -59,7 +59,7 @@
       become: false
       run_once: true
       ansible.builtin.replace:
-        path: "{{ playbook_dir }}/../../../ansible/kubernetes/kubeconfig"
+        path: "{{ playbook_dir }}/../../private_keys/kubeconfig"
         regexp: "https://127.0.0.1:{{ k3s_server['https-listen-port'] }}"
         replace: "https://{{ k3s_registration_address }}:{{ k3s_server['https-listen-port'] }}"
 
