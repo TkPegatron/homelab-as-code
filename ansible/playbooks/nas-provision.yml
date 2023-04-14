@@ -1,0 +1,11 @@
+---
+- name: MinIO Installation
+  hosts: nas
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  tasks:
+
+    - name: Install MinIO Server
+      ansible.builtin.include_role:
+        name: minio

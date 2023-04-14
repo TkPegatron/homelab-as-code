@@ -1,0 +1,39 @@
+---
+- name: "Prepare hosts to become cluter members"
+  hosts: kubernetes
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  vars:
+    ansible_ssh_user: root
+  tasks:
+    - name: Locale
+      block:
+        - name: Locale | Set timezone
+          community.general.timezone:
+            name: "{{ timezone | default('Etc/UTC') }}"
+    - name: User Configuration
+      block:
+        - name: User Configuration | Create user account
+          ansible.builtin.user:
+            name: "{{ item.name }}"
+            comment: "{{ item.comment | default(omit) }}"
+            password: "{{ item.password }}"
+            append: "{{ item.append | default(omit) }}"
+            groups: "{{ item.groups | default('users') }}"
+          loop: "{{ provision_users }}"
+        - name: User Configuration | Allow user to sudo without password
+          ansible.builtin.copy:
+            content: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
+            dest: "/etc/sudoers.d/{{ item.name }}"
+            mode: 0644
+            owner: root
+            group: root
+          when: item.nopasswd == true
+          loop: "{{ provision_users }}"
+        - name: User Configuration | Add SSH public keys
+          ansible.posix.authorized_key:
+            user: "{{ item.name }}"
+            key: "{{ item.public_ssh_keys }}"
+          when: item.public_ssh_keys != ""
+          loop: "{{ provision_users }}"

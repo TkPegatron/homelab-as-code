@@ -11,11 +11,6 @@
       ansible.builtin.pause:
         seconds: 5
   tasks:
-    - name: Locale
-      block:
-        - name: Locale | Set timezone
-          community.general.timezone:
-            name: "{{ timezone | default('Etc/UTC') }}"
     - name: Networking
       block:
         - name: Networking | Set hostname to inventory hostname
@@ -26,31 +21,17 @@
             path: /etc/hosts
             block: |
               127.0.1.1   {{ inventory_hostname }}
-    - name: Packages | Fedora
-      when: ansible_facts['distribution'] == 'Fedora'
+    - name: Packages | RHEL
+      when: ansible_facts['distribution'] in ['Fedora','Rocky']
       block:
         - name: Packages | Install required packages
           ansible.builtin.dnf:
-            name: "{{ fedora.packages | default([]) }}"
+            name: "{{ system_packages | default([]) }}"
             state: present
             update_cache: true
         - name: Packages | Remove leaf packages
           ansible.builtin.dnf:
             autoremove: true
-    - name: User Configuration
-      block:
-        - name: User Configuration | Allow user to sudo without password
-          ansible.builtin.copy:
-            content: "{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL"
-            dest: "/etc/sudoers.d/{{ ansible_user }}"
-            mode: 0644
-            owner: root
-            group: root
-        - name: User Configuration | Add additional SSH public keys
-          ansible.posix.authorized_key:
-            user: "{{ ansible_user }}"
-            key: "{{ item }}"
-          loop: "{{ public_ssh_keys | default([]) }}"
     - name: System Configuration (1)
       block:
         - name: System Configuration (1) | Disable firewalld | Fedora
@@ -59,7 +40,7 @@
             enabled: false
             masked: true
             state: stopped
-          when: ansible_facts['distribution'] == 'Fedora'
+          when: ansible_facts['distribution'] in ['Fedora','Rocky']
         - name: System Configuration (1) | Enable fstrim
           ansible.builtin.systemd:
             service: fstrim.timer
@@ -100,7 +81,7 @@
           ansible.builtin.dnf:
             name: zram-generator-defaults
             state: absent
-          when: ansible_facts['distribution'] == 'Fedora'
+          when: ansible_facts['distribution'] in ['Fedora','Rocky']
         - name: System Configuration (2) | Disable swap at runtime | Ubuntu
           ansible.builtin.command: swapoff -a
           when:
@@ -191,6 +172,7 @@
           ansible.builtin.include_role:
             name: linux-system-roles.nbde_client
             public: true
+          no_log: false
 
   handlers:
     - name: Reboot
