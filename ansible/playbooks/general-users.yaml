@@ -1,17 +1,29 @@
 ---
 - name: "Prepare hosts to become cluter members"
-  hosts: kubernetes
+  hosts: firewall
   become: true
   gather_facts: true
   any_errors_fatal: true
   vars:
-    ansible_ssh_user: root
+    ansible_ssh_user: ansible
   tasks:
     - name: Locale
       block:
         - name: Locale | Set timezone
           community.general.timezone:
             name: "{{ timezone | default('Etc/UTC') }}"
+    - name: System Configuration
+      block:
+        - name: System Configuration | Install EPEL Repo
+          ansible.builtin.dnf:
+            name: "epel-release"
+            state: present
+            update_cache: true
+        - name: System Configuration | Install System Packages
+          ansible.builtin.dnf:
+            name: "{{ system_packages | default([]) }}"
+            state: present
+            update_cache: true
     - name: User Configuration
       block:
         - name: User Configuration | Create user account
@@ -37,3 +49,23 @@
             key: "{{ item.public_ssh_keys }}"
           when: item.public_ssh_keys != ""
           loop: "{{ provision_users }}"
+        - name: User Configuration | Install Dotfiles
+          when: install_dotfiles != ""
+          block:
+            - name: Ensure Dependencies are Available
+              ansible.builtin.dnf:
+                name: "{{ dotfiles_prereqs }}"
+                state: present
+              #loop: "{{ provision_users }}"
+            - name: Clone repository into $HOME
+              loop: "{{ provision_users }}"
+              become_user: "{{ item.name }}"
+              ansible.builtin.git:
+                repo: "{{ install_dotfiles }}"
+                dest: "/home/{{ item.name }}/.dotfiles"
+            - name: Execute Installation Script
+              loop: "{{ provision_users }}"
+              become_user: "{{ item.name }}"
+              ansible.builtin.shell: "./install.sh"
+              args:
+                chdir: "/home/{{ item.name }}/.dotfiles"
