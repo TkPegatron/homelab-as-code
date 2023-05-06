@@ -1,3 +1,13 @@
+- name: "Provision general system configuration"
+  hosts: firewall
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  vars:
+    ansible_ssh_user: ansible
+  roles:
+    - role: userspace
+
 - name: "Provision hosts as Firewalls"
   hosts: firewall
   become: true

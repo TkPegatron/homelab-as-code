@@ -1,0 +1,30 @@
+general_system_packages:
+  - zsh
+  - git
+  - wget
+  - curl
+  - htop
+  - stow
+
+general_users:
+
+  - name: elliana
+    comment: "Elliana Perry"
+    password: "$6$W80qnfPVcFgNDqVd$R0zpEp9CvC5xKL3NS8L/Sj.82Eq6vAiR720DNtVEZDf8FiR9ulif7sdSv0dC2HtxMw2.kYfRY5IXA6X9Kz05H1"
+    append: true
+    nopasswd: true
+    groups: users,wheel
+    shell: /usr/bin/zsh
+    public_ssh_keys:
+      - https://github.com/tkpegatron.keys
+    dotfiles_git_url: https://github.com/TkPegatron/dotfiles.git
+    dotfiles_installer: "./install.sh"
+
+  - name: ansible
+    comment: "Ansible Automation"
+    password: "$6$bagegz6oGhX.NTZl$8kiGEh4PaZ0zswgk79rKwgRBJfNCMsOdAtSIyfErDhTXZVlOpJLGaD1oo7rYaiR4mpzZ0EaaputYNH/uhYra71"
+    append: true
+    nopasswd: true
+    groups: wheel
+    public_ssh_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv

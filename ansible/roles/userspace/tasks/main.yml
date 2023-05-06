@@ -1,0 +1,10 @@
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone | default('Etc/UTC') }}"
+
+- name: Spool in package management tasks
+  ansible.builtin.import_tasks: package-management.yml
+
+- name: Spool in user configuration tasks
+  ansible.builtin.import_tasks: users.yml
+  when: general_users != []

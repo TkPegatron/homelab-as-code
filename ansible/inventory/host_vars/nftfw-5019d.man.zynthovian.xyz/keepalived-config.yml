@@ -1,0 +1,16 @@
+keepalived_instances:
+  internal:
+    virtual_router_id: 55
+    state: MASTER
+    priority: 250
+    version: 3
+    advert_int: 1
+    unicast_src_ip: 172.22.0.120/25
+    unicast_peers:
+      - 172.22.0.119
+    vips:
+      - 172.22.0.1/25 dev enp1s0
+      - 172.22.1.1/25 dev enp7s0
+    track_interfaces:
+      - enp1s0
+      - enp7s0
