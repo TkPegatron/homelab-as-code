@@ -1,0 +1,8 @@
+kea_packages:
+  - kea
+  - kea-hooks
+
+kea_control_agent_config: {}
+kea_ddns_config: {}
+kea_dhcp6_config: {}
+kea_dhcp4_config: {}

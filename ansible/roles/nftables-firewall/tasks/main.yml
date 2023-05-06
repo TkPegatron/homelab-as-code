@@ -1,0 +1,14 @@
+---
+- name: Spool in nftables configuration tasks
+  ansible.builtin.import_tasks: nftables.yml
+  # when: Always, this is the core configuration for firewall/router
+
+- name: Append modified files
+  ansible.builtin.set_fact:
+    controlled_files: "{{
+        controlled_files | default([]) + [
+          '/etc/sysctl.d/99-routing.conf',
+          '/etc/sysconfig/nftables.conf',
+          '/etc/nftables/main.nft'
+        ]
+      }}"

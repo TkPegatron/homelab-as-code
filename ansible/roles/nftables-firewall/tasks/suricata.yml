@@ -1,0 +1,24 @@
+#
+#    - name: System Configuration | Ensure EPEL is available
+#      ansible.builtin.dnf:
+#        name: epel-release
+#        state: present
+#
+#    - name: Suricata | Install Suricata
+#      ansible.builtin.dnf:
+#        name: suricata
+#        state: present
+#
+#    - name: Suricata | Install Configuration
+#      ansible.builtin.copy:
+#        src: "{{ item.src }}"
+#        dest: "{{ item.dest }}"
+#      with_items:
+#        - {src: "../files/configuration/{{ ansible_hostname }}/etc/sysconfig/suricata", dest: "/etc/sysconfig/suricata"}
+#
+#    - name: Suricata | Start-Enable Suricata
+#      ansible.builtin.service:
+#        name: suricata.service
+#        state: started
+#        enabled: true
+#

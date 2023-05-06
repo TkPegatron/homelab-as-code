@@ -3,168 +3,61 @@
   become: true
   gather_facts: true
   any_errors_fatal: true
-  #? Role times out, but can be circumvented by installing the binary manually
-  #roles:
-  #  - role: geerlingguy.node_exporter
-  handlers:
-    - name: reload-nftables
-      ansible.builtin.service:
-        name: nftables.service
-        state: restarted
-    - name: reload-suricata
-      ansible.builtin.service:
-        name: suricata.service
-        state: restarted
-    - name: reload-keepalived
-      ansible.builtin.service:
-        name: keepalived.service
-        state: restarted
-    - name: reload-dhcpd
-      ansible.builtin.service:
-        name: dhcpd.service
-        state: restarted
-  tasks:
+  pre_tasks:
+    - name: Add nftables configuration to variable
+      ansible.builtin.set_fact:
+        nftables_rules_raw:
+          "{{ lookup('file', '../files/configuration/' + ansible_hostname + '/etc/nftables/main.nft') }}"
+  roles:
+    - role: geerlingguy.node_exporter
+    - role: nftables-firewall
+    - role: dhcp-kea
+  post_tasks:
+    - name: Retreive modified configuration data
+      block:
+        # Fetch takes care of this actually
+        # - name: Create local directory structure
+        #   loop: "{{ controlled_files }}"
+        #   ansible.builtin.file:
+        #     path: "{{ item | dirname }}"
+        #     state: directory
+        - name: Fetch configuration files
+          loop: "{{ controlled_files }}"
+          ansible.builtin.fetch:
+            fail_on_missing: false
+            src: "{{ item }}"
+            dest: /tmp/config/
+            # dest: /tmp/config/{{ ansible_hostname }}/{{ item }}
 
-    - name: System Configuration | Tune sysctls
-      ansible.posix.sysctl:
-        name: "{{ item.key }}"
-        value: "{{ item.value }}"
-        sysctl_file: /etc/sysctl.d/99-routing.conf
-        reload: true
-      with_dict: "{{ sysctl_config }}"
-      vars:
-        sysctl_config:
-          net.ipv4.ip_forward: 1
-          net.ipv4.conf.all.forwarding: 1
-          net.ipv4.conf.all.rp_filter: 1
-          net.ipv4.conf.default.rp_filter: 1
-          net.ipv6.conf.all.forwarding: 1
+# TODO: Learn how to use and configure suricata
+#         With it's defaults it was blocking important traffic in a weird way
 
-    - name: System Configuration | Ensure EPEL is available
-      ansible.builtin.dnf:
-        name: epel-release
-        state: present
-
-    - name: Suricata | Install Suricata
-      ansible.builtin.dnf:
-        name: suricata
-        state: present
-
-    - name: Suricata | Install Configuration
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-        - {src: "../files/configuration/{{ ansible_hostname }}/etc/sysconfig/suricata", dest: "/etc/sysconfig/suricata"}
-
-    - name: Suricata | Start-Enable Suricata
-      ansible.builtin.service:
-        name: suricata.service
-        state: started
-        enabled: true
-
-    - name: "Netfilter Tables | Install Configuration"
-      notify: 'reload-nftables'
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        owner: root
-        group: root
-        mode: 0600
-        validate: nft -cf %s
-      with_items:
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/nftables/main.nft"
-          dest: "/etc/nftables/main.nft"
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/sysconfig/nftables.conf"
-          dest: "/etc/sysconfig/nftables.conf"
-
-    - name: "Netfilter Tables | Adjust Services"
-      ansible.builtin.service:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        enabled: "{{ item.enabled }}"
-      with_items:
-        - name: nftables.service
-          state: started
-          enabled: true
-        - name: firewalld.service
-          state: stopped
-          enabled: false
-
-    - name: "Keepalive Daemon | Ensure Package Presence"
-      ansible.builtin.dnf:
-        name: keepalived
-        state: present
-
-    - name: "Keepalive Daemon | Install Configuration File(s)"
-      notify: reload-keepalived
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        owner: root
-        group: root
-        mode: 0644
-      with_items:
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/keepalived/keepalived.conf"
-          dest: "/etc/keepalived/keepalived.conf"
-
-    - name: "Keepalive Daemon | Start-Enable Service"
-      ansible.builtin.service:
-        name: keepalived.service
-        state: started
-        enabled: true
-
-# ==={ Dynamic Host Configuration Protocol }======================================================-
-
-    #- name: "ISC DHCP Server | Ensure Package Presence"
-    #  ansible.builtin.dnf:
-    #    name: dhcp-server
-    #    state: present
-
-    - name: "ISC DHCP Server | Install Configuration File(s)"
-      # Maintaining configuration file presence
-      #notify: reload-dhcpd
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        owner: root
-        group: root
-        mode: 0644
-        validate: dhcpd -t -cf %s
-      with_items:
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/dhcp/dhcpd.conf"
-          dest: "/etc/dhcp/dhcpd.conf"
-
-    #- name: "ISC DHCP Server | Start-Enable Service"
-    #  ansible.builtin.service:
-    #    name: dhcpd.service
-    #    state: started
-    #    enabled: true
-
-    - name: "ISC Kea DHCP Server | Ensure Package Presence"
-      ansible.builtin.dnf:
-        name: [ "kea", "kea-hooks" ]
-        state: present
-
-    - name: "ISC Kea DHCP Server | Copy Configuration Files"
-      #notify: reload-kea
-      ansible.builtin.copy:
-        mode: 0644
-        owner: root
-        group: root
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/kea/kea-ctrl-agent.conf.jsonc"
-          dest: "/etc/kea/kea-ctrl-agent.conf"
-        - src: "../files/configuration/{{ ansible_hostname }}/etc/kea/kea-dhcp4.conf.jsonc"
-          dest: "/etc/kea/kea-dhcp4.conf"
-
-    - name: "ISC Kea DHCP Server | Start-Enable Service"
-      ansible.builtin.service:
-        name: "{{ item }}"
-        state: started
-        enabled: true
-      loop:
-        - kea-ctrl-agent.service
-        - kea-dhcp4.service
+#  handlers:
+#    - name: reload-keepalived
+#      ansible.builtin.service:
+#        name: keepalived.service
+#        state: restarted
+#  tasks:
+#
+#    - name: "Keepalive Daemon | Ensure Package Presence"
+#      ansible.builtin.dnf:
+#        name: keepalived
+#        state: present
+#
+#    - name: "Keepalive Daemon | Install Configuration File(s)"
+#      notify: reload-keepalived
+#      ansible.builtin.copy:
+#        src: "{{ item.src }}"
+#        dest: "{{ item.dest }}"
+#        owner: root
+#        group: root
+#        mode: 0644
+#      with_items:
+#        - src: "../files/configuration/{{ ansible_hostname }}/etc/keepalived/keepalived.conf"
+#          dest: "/etc/keepalived/keepalived.conf"
+#
+#    - name: "Keepalive Daemon | Start-Enable Service"
+#      ansible.builtin.service:
+#        name: keepalived.service
+#        state: started
+#        enabled: true

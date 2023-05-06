@@ -1,0 +1,30 @@
+---
+- name: Spool in package management tasks
+  ansible.builtin.import_tasks: package-management.yml
+
+- name: Spool in kea control agent tasks
+  ansible.builtin.import_tasks: ctrl-agent.yml
+  # when: Always, this is the core configuration for kea
+
+- name: Spool in ddns tasks
+  ansible.builtin.import_tasks: ddns.yml
+  when: kea_ddns_config != {}
+
+- name: Spool in dhcp4 tasks
+  ansible.builtin.import_tasks: dhcp4-server.yml
+  when: kea_dhcp4_config != {}
+
+- name: Spool in dhcp6 tasks
+  ansible.builtin.import_tasks: dhcp6-server.yml
+  when: kea_dhcp6_config != {}
+
+- name: Append modified files
+  ansible.builtin.set_fact:
+    controlled_files: "{{
+        controlled_files | default([]) + [
+          '/etc/kea/kea-ctrl-agent.conf',
+          '/etc/kea/kea-dhcp-ddns.conf',
+          '/etc/kea/kea-dhcp4.conf',
+          '/etc/kea/kea-dhcp6.conf',
+        ]
+      }}"

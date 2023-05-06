@@ -1,0 +1,17 @@
+---
+- name: Configure kea dhcp4
+  ansible.builtin.template:
+    src: kea-ctrl-agent.conf
+    dest: /etc/kea/kea-ctrl-agent.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+    # Fobidden mode?
+    # mode: 0644
+  notify: Restart kea control agent
+
+- name: Start and Enable kea dhcp4 service
+  ansible.builtin.service:
+    name: kea-ctrl-agent.service
+    state: started
+    enabled: true

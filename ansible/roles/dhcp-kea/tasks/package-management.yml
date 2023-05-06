@@ -1,0 +1,5 @@
+---
+- name: Install ISC Kea DHCP server packages
+  ansible.builtin.dnf:
+    name: "{{ kea_packages }}"
+    state: present

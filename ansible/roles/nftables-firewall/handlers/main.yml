@@ -1,0 +1,11 @@
+---
+- name: Reload NFTables
+  listen: "reload-nftables"
+  ansible.builtin.service:
+    name: nftables.service
+    state: restarted
+
+#    - name: reload-suricata
+#      ansible.builtin.service:
+#        name: suricata.service
+#        state: restarted

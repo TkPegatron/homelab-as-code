@@ -1,0 +1,17 @@
+---
+- name: Configure kea ddns
+  ansible.builtin.template:
+    src: kea-dhcp-ddns.conf
+    dest: /etc/kea/kea-dhcp-ddns.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+    # Fobidden mode?
+    # mode: 0644
+  notify: Restart kea ddns server
+
+- name: Start and Enable kea ddns service
+  ansible.builtin.service:
+    name: kea-dhcp-ddns.service
+    state: started
+    enabled: true
