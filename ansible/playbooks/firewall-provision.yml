@@ -7,10 +7,11 @@
     - name: Add nftables configuration to variable
       ansible.builtin.set_fact:
         nftables_rules_raw:
-          "{{ lookup('file', '../files/configuration/' + ansible_hostname + '/etc/nftables/main.nft') }}"
+          "{{ lookup('file', '../../configuration/' + ansible_hostname + '/etc/nftables/main.nft') }}"
   roles:
     - role: geerlingguy.node_exporter
     - role: nftables-firewall
+    - role: keepalived
     - role: dhcp-kea
   post_tasks:
     - name: Retreive modified configuration data
@@ -23,6 +24,7 @@
         #     state: directory
         - name: Fetch configuration files
           loop: "{{ controlled_files }}"
+          when: controlled_files is defined
           ansible.builtin.fetch:
             fail_on_missing: false
             src: "{{ item }}"

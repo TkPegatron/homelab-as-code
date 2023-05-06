@@ -1,0 +1,33 @@
+- name: Install keepalived package
+  ansible.builtin.dnf:
+    name: keepalived
+    state: present
+
+- name: Configure keepalived
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: "{{ keepalived_config_file_path }}"
+    mode: "0640"
+    validate: keepalived --config-test -f %s
+  notify:
+    - reload keepalived
+  tags:
+    - keepalived-config
+
+- name: Ensuring keepalived is enabled and started
+  ansible.builtin.service:
+    daemon_reload: true
+    name: "{{ keepalived_service_name }}"
+    state: "started"
+    enabled: true
+  register: _servicestart
+  tags:
+    - keepalived-install
+
+- name: Append controlled files
+  ansible.builtin.set_fact:
+    controlled_files: "{{
+        controlled_files | default([]) + [
+          keepalived_config_file_path
+        ]
+      }}"
