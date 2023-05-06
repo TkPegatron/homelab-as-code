@@ -1,41 +1,44 @@
-FROM docker.io/library/alpine:edge
+ARG VARIANT=3.17
+FROM docker.io/library/alpine:${VARIANT}
 
-ARG UPGRADE_PACKAGES="true"
-
+# -{ ENV: Consume Environment variables }
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
-
 ARG TZ=America/Detroit
 
-# Add package repositories 
+# -{ MOD: Add repositories }
 RUN /bin/true \
-    && echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories 
+    && echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories
 
-# System Packages
-RUN apk add  --no-cache --upgrade \
+# -{ PMINST: Important system utilities }
+RUN apk add --upgrade \
+    util-linux pciutils usbutils coreutils binutils findutils grep iproute2
+
+RUN apk add --upgrade \
     zsh bat direnv curl exa stow file git skim neovim starship tzdata \
     ca-certificates gpg gpg-agent openssh-client libcrypto3 \
     python3 py3-pip sshpass pcre
 
 # Environment tools (For Terraform, Kubernetes & Ansible GitOps workflow)
-RUN apk add --no-cache --upgrade \
-    kubectl helm ansible terraform age pre-commit jq yq \ 
-    yamllint ansible-lint ipcalc go-task
+RUN apk add --upgrade \
+    kubectl kustomize helm ansible terraform age pre-commit jq yq \
+    yamllint ansible-lint ipcalc go-task sops flux
 
-## Install Mozilla SOPS
-RUN wget --output-document="/tmp/sops" "https://github.com/mozilla/sops/releases/download/v3.7.3/sops-v3.7.3.linux.amd64" \
-    && chmod +x /tmp/sops && mv /tmp/sops /usr/local/bin/sops
+# -{ MOD: Configure userspace environment }
 
-## Install (kubernetes-sigs) kustomize
-RUN curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-
-## Install fluxcd
-RUN curl -s "https://fluxcd.io/install.sh" | bash
-
-# System Configuration
 RUN \
     # Set the container's timezone \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone; \
     # Add local user account inside container \
     adduser --shell /bin/zsh --disabled-password $USERNAME
+
+USER $USERNAME
+
+# Install Python Dependencies
+COPY ./requirements.txt /opt/requirements.txt
+RUN pip install -r /opt/requirements.txt
+
+# Install Ansible Depenedencies
+COPY ./requirements.yml /opt/requirements.yml
+RUN ansible-galaxy install -r /opt/requirements.yml

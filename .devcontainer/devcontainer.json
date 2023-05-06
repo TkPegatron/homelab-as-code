@@ -1,8 +1,10 @@
 {
+	"name": "Homelab Builder",
 	"build": {
-		"dockerfile": "Dockerfile",
+		"dockerfile": "./Dockerfile",
 		"args": {
 			"USERNAME": "${localEnv:USER}",
+			"VARIANT": "edge",
 			"UID": "1000"
 		}
 	},
@@ -15,6 +17,7 @@
 	"remoteUser": "${localEnv:USER}",
 	"customizations": {
 		"vscode": {
+			"settings.extensions.verifySignature": false,
 			"extensions": [
 				"aaron-bond.better-comments",
 				"britesnow.vscode-toggle-quotes",
@@ -28,7 +31,8 @@
 				"redhat.ansible",
 				"signageos.signageos-vscode-sops",
 				"usernamehw.errorlens",
-				"medo64.render-crlf"
+				"medo64.render-crlf",
+				"mohsen1.prettify-json"
 			]
 		}
 	}
