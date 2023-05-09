@@ -14,16 +14,21 @@
       net.ipv4.conf.default.rp_filter: 1
       net.ipv6.conf.all.forwarding: 1
 
+- name: Configure nftables sysconfig
+  notify: 'reload-nftables'
+  ansible.builtin.template:
+    src: sysconfig/nftables.conf
+    dest: /etc/sysconfig/nftables.conf
+    owner: root
+    group: root
+    mode: u=rw,g=,o=
+    validate: nft -cf %s
+
 - name: Configure nftables
   notify: 'reload-nftables'
-  with_items:
-    - src: nftables.conf
-      dest: /etc/sysconfig/nftables.conf
-    - src: main.nft
-      dest: /etc/nftables/main.nft
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: nftables/main.nft
+    dest: /etc/nftables/main.nft
     owner: root
     group: root
     mode: u=rw,g=,o=
@@ -40,31 +45,3 @@
     name: nftables.service
     state: started
     enabled: true
-
-#    - name: "Netfilter Tables | Install Configuration"
-#      notify: 'reload-nftables'
-#      ansible.builtin.copy:
-#        src: "{{ item.src }}"
-#        dest: "{{ item.dest }}"
-#        owner: root
-#        group: root
-#        mode: 0600
-#        validate: nft -cf %s
-#      with_items:
-#        - src: "../files/configuration/{{ ansible_hostname }}/etc/nftables/main.nft"
-#          dest: "/etc/nftables/main.nft"
-#        - src: "../files/configuration/{{ ansible_hostname }}/etc/sysconfig/nftables.conf"
-#          dest: "/etc/sysconfig/nftables.conf"
-#
-#    - name: "Netfilter Tables | Adjust Services"
-#      ansible.builtin.service:
-#        name: "{{ item.name }}"
-#        state: "{{ item.state }}"
-#        enabled: "{{ item.enabled }}"
-#      with_items:
-#        - name: nftables.service
-#          state: started
-#          enabled: true
-#        - name: firewalld.service
-#          state: stopped
-#          enabled: false

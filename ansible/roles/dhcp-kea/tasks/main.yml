@@ -18,7 +18,7 @@
   ansible.builtin.import_tasks: dhcp6-server.yml
   when: kea_dhcp6_config != {}
 
-- name: Append modified files
+- name: Append controlled files fact
   ansible.builtin.set_fact:
     controlled_files: "{{
         controlled_files | default([]) + [
