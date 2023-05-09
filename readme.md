@@ -13,8 +13,6 @@ Included in this repository is a set of playbooks and roles designed to configur
 - KeepaliveD: VRRP Daemon.
 - Fail2Ban
 
-## ⛃ Network Storage
-
 ## ⛵ Kubernetes
 
 My cluster is [k3s](https://k3s.io/) provisioned overtop bare-metal Fedora Server using the [Ansible](https://www.ansible.com/) galaxy role [ansible-role-k3s](https://github.com/PyratLabs/ansible-role-k3s). This is a semi hyper-converged cluster, workloads and block storage are sharing the same available resources on my nodes while I have a separate server for (NFS/S3) file storage.
