@@ -1,0 +1,7 @@
+nbde_server_provider: tang
+nbde_server_service_state: started
+nbde_server_manage_selinux: true
+nbde_server_rotate_keys: false
+nbde_server_fetch_keys: false
+nbde_server_deploy_keys: false
+nbde_server_port: 6830

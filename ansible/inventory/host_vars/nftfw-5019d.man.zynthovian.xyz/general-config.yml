@@ -1,3 +1,31 @@
+---
+nftables_nic_wan: enp8s0
+nftables_nic_lan: enp7s0
+nftables_nic_man: enp1s0
+
+logrotate_global_config: false # Only want to control files in includes
+logrotate_applications:
+  - name: nftables
+    definitions:
+      - logs:
+          - /var/log/nftables.log
+        options:
+          - rotate 5
+          - daily
+          - maxsize 100M
+          - missingok
+          - notifempty
+          - delaycompress
+          - compress
+
+rsyslog_rsyslog_d_files:
+  - name: nftables
+    content: |
+      :msg, regex, "^nftables\." {
+          action(type="omfile" file="/var/log/nftables.log")
+          stop
+      }
+
 general_system_packages:
   - zsh
   - git
@@ -28,3 +56,13 @@ general_users:
     groups: wheel
     public_ssh_keys:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv
+
+controlled_files:
+  # Files that I have modified by hand
+  #  merged with files modified by modules called in plays
+  - '/etc/NetworkManager/system-connections/enp1s0.nmconnection' # Altered by hand:: System init
+  - '/etc/NetworkManager/system-connections/enp7s0.nmconnection' # Altered by hand:: System init
+  - '/etc/NetworkManager/system-connections/enp8s0.nmconnection' # Altered by hand:: System init
+  - '/etc/sysconfig/suricata'
+  - '/etc/logrotate.d/nftables' # Managed by arillso.logrotate
+  - '/etc/rsyslog.d/nftables.conf'
