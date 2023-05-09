@@ -17,21 +17,31 @@
     - name: Add nftables configuration to variable
       ansible.builtin.set_fact:
         nftables_rules_raw:
-          "{{ lookup('file', '../../configuration/' + ansible_hostname + '/etc/nftables/main.nft') }}"
+          "{{ lookup('template', '../templates/nftables/main.nft') }}"
   roles:
+    - role: linux-system-roles.nbde_server
     - role: geerlingguy.node_exporter
     - role: nftables-firewall
     - role: keepalived
     - role: dhcp-kea
+    - role: fail2ban
+    - role: arillso.logrotate
   post_tasks:
+    - name: Configure rsyslog to intercept nftables kernel logs
+      block:
+        # Doing this outside a role is a little messy
+        # But since I don't need to do much for it, Id rather this than a role
+        - name: Deploy configuration file
+          loop: "{{ rsyslog_rsyslog_d_files }}"
+          notify: "Restart Rsyslog"
+          ansible.builtin.copy:
+            content: "{{ item.content }}"
+            dest: /etc/rsyslog.d/{{ item.name }}.conf
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=
     - name: Retreive modified configuration data
       block:
-        # Fetch takes care of this actually
-        # - name: Create local directory structure
-        #   loop: "{{ controlled_files }}"
-        #   ansible.builtin.file:
-        #     path: "{{ item | dirname }}"
-        #     state: directory
         - name: Fetch configuration files
           loop: "{{ controlled_files }}"
           when: controlled_files is defined
@@ -39,37 +49,8 @@
             fail_on_missing: false
             src: "{{ item }}"
             dest: /tmp/config/
-            # dest: /tmp/config/{{ ansible_hostname }}/{{ item }}
-
-# TODO: Learn how to use and configure suricata
-#         With it's defaults it was blocking important traffic in a weird way
-
-#  handlers:
-#    - name: reload-keepalived
-#      ansible.builtin.service:
-#        name: keepalived.service
-#        state: restarted
-#  tasks:
-#
-#    - name: "Keepalive Daemon | Ensure Package Presence"
-#      ansible.builtin.dnf:
-#        name: keepalived
-#        state: present
-#
-#    - name: "Keepalive Daemon | Install Configuration File(s)"
-#      notify: reload-keepalived
-#      ansible.builtin.copy:
-#        src: "{{ item.src }}"
-#        dest: "{{ item.dest }}"
-#        owner: root
-#        group: root
-#        mode: 0644
-#      with_items:
-#        - src: "../files/configuration/{{ ansible_hostname }}/etc/keepalived/keepalived.conf"
-#          dest: "/etc/keepalived/keepalived.conf"
-#
-#    - name: "Keepalive Daemon | Start-Enable Service"
-#      ansible.builtin.service:
-#        name: keepalived.service
-#        state: started
-#        enabled: true
+  handlers:
+    - name: Restart Rsyslog
+      ansible.builtin.service:
+        name: rsyslog.service
+        state: restarted

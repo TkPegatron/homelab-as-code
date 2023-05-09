@@ -1,0 +1,12 @@
+fail2ban_ignoreips:
+  - 172.22.0.0/23
+
+fail2ban_jail_configuration:
+  DEFAULT:
+    # Set f2b action to use nftables
+    banaction: nftables
+    banaction_allports: nftables[type=allports]
+  # configure sshd jail
+  sshd:
+    enabled: true
+    bantime: 2w

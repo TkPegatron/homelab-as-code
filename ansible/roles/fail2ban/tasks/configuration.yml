@@ -1,0 +1,54 @@
+---
+- name: Configure fail2ban.local
+  community.general.ini_file:
+    path: /etc/fail2ban/fail2ban.local
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    mode: "0640"
+  loop: "{{ fail2ban_base_configuration + fail2ban_ini_configuration }}"
+  notify:
+    - Restart fail2ban
+  loop_control:
+    label: "{{ item.option }}"
+  vars:
+    # Convert dictionary to iterable items for administrative convenience
+    fail2ban_ini_configuration: |
+      [
+      {% for section, values in fail2ban_configuration.items() %}
+      {% for option, value in values.items() %}
+        {
+          "section": "{{ section }}",
+          "option": "{{ option }}",
+          "value": "{{ value }}"
+        },
+      {% endfor %}
+      {% endfor %}
+      ]
+
+- name: Configure jail.local
+  community.general.ini_file:
+    path: /etc/fail2ban/jail.local
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    mode: "0640"
+  loop: "{{ fail2ban_base_jail_configuration + fail2ban_jail_ini_configuration }}"
+  notify:
+    - Restart fail2ban
+  loop_control:
+    label: "{{ item.option }}"
+  vars:
+    # Convert dictionary to iterable items for administrative convenience
+    fail2ban_jail_ini_configuration: |
+      [
+      {% for section, values in fail2ban_jail_configuration.items() %}
+      {% for option, value in values.items() %}
+        {
+          "section": "{{ section }}",
+          "option": "{{ option }}",
+          "value": "{{ value }}"
+        },
+      {% endfor %}
+      {% endfor %}
+      ]

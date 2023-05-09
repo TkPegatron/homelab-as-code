@@ -1,0 +1,40 @@
+---
+- name: Install fail2ban
+  ansible.builtin.package:
+    name: "{{ fail2ban_packages }}"
+    state: present
+
+- name: Copy filters in filter.d
+  ansible.builtin.copy:
+    src: "{{ fail2ban_filterd_path }}"
+    dest: /etc/fail2ban/filter.d/
+    owner: root
+    group: root
+    mode: "0640"
+  when:
+    - fail2ban_filterd_path is defined
+  notify:
+    - Restart fail2ban
+
+- name: Spool in jail and core configuration tasks
+  ansible.builtin.import_tasks: configuration.yml
+
+- name: Stat auth log file
+  ansible.builtin.stat:
+    path: /var/log/auth.log
+  register: fail2ban_auth
+
+- name: Touch auth log file
+  ansible.builtin.file:
+    path: /var/log/auth.log
+    state: touch
+    mode: "0640"
+  when:
+    - fail2ban_auth.stat.exists is defined
+    - not fail2ban_auth.stat.exists
+
+- name: Start and enable fail2ban
+  ansible.builtin.service:
+    name: "{{ fail2ban_service }}"
+    state: started
+    enabled: true
