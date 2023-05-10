@@ -1,4 +1,4 @@
-ARG VARIANT=3.17
+ARG VARIANT=3.18
 FROM docker.io/library/alpine:${VARIANT}
 
 # -{ ENV: Consume Environment variables }
