@@ -204,17 +204,17 @@ spec:
           - hosts:
               - *host
       thanosService:
-        enabled: true
+        enabled: false
       thanosServiceMonitor:
-        enabled: true
+        enabled: false
       prometheusSpec:
         replicas: 3
         replicaExternalLabelName: __replica__
-        thanos:
-          image: quay.io/thanos/thanos:v0.31.0
-          objectStorageConfig:
-            name: thanos-objstore-secret
-            key: objstore.yml
+        #thanos:
+        #  image: quay.io/thanos/thanos:v0.31.0
+        #  objectStorageConfig:
+        #    name: thanos-objstore-secret
+        #    key: objstore.yml
         ruleSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
         podMonitorSelectorNilUsesHelmValues: false
