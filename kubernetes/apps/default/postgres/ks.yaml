@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1beta2.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: cluster-apps-postgres-cluster-default
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cluster-operators-cloudnative-pg
+    - name: cluster-apps-local-path-provisioner
+  path: ./kubernetes/apps/default/postgres/cnpg-cluster
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: homelab-as-code
+  healthChecks:
+    - apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      name: postgres
+      namespace: default
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
