@@ -82,7 +82,10 @@ spec:
             action: drop
     kubeControllerManager:
       enabled: true
-      endpoints: ["172.22.0.10", "172.22.0.11", "172.22.0.12"]
+      endpoints: &kube_endpoints
+        - "172.22.0.10"
+        - "172.22.0.11"
+        - "172.22.0.12"
       serviceMonitor:
         metricRelabelings:
           # Remove duplicate metrics
@@ -91,13 +94,13 @@ spec:
             action: keep
     kubeScheduler:
       enabled: true
-      endpoints: ["172.22.0.10", "172.22.0.11", "172.22.0.12"]
+      endpoints: *kube_endpoints
     kubeProxy:
       enabled: false # Enable if not using eBPF
-      endpoints: ["172.22.0.10", "172.22.0.11", "172.22.0.12"]
+      endpoints: *kube_endpoints
     kubeEtcd:
       enabled: true
-      endpoints: ["172.22.0.10", "172.22.0.11", "172.22.0.12"]
+      endpoints: *kube_endpoints
     prometheus:
       ingress:
         enabled: true
