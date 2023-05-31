@@ -52,7 +52,10 @@ spec:
             targetLabel: instance
             action: replace
     kube-state-metrics:
-      metricLabelsAllowlist: ["persistentvolumeclaims=[*]"]
+      metricLabelsAllowlist:
+        - "pods=[*]"
+        - "deployments=[*]"
+        - "persistentvolumeclaims=[*]"
       prometheus:
         monitor:
           enabled: true
