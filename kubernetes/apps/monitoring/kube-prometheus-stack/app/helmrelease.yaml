@@ -129,20 +129,19 @@ spec:
       prometheusSpec:
         replicas: 3
         replicaExternalLabelName: __replica__
+        ruleSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        retention: 2d
+        retentionSize: 15GB
+        enableAdminAPI: true
+        walCompression: true
         #thanos:
         #  image: quay.io/thanos/thanos:v0.31.0
         #  objectStorageConfig:
         #    name: thanos-objstore-secret
         #    key: objstore.yml
-        ruleSelectorNilUsesHelmValues: false
-        serviceMonitorSelectorNilUsesHelmValues: false
-        podMonitorSelectorNilUsesHelmValues: false
-        probeSelectorNilUsesHelmValues: false
-        scrapeInterval: 1m
-        retention: 2d
-        retentionSize: 16GB
-        enableAdminAPI: true
-        walCompression: true
         storageSpec:
           volumeClaimTemplate:
             spec:
