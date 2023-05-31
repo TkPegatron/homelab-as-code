@@ -23,7 +23,10 @@ RUN apk add --upgrade \
 # Environment tools (For Terraform, Kubernetes & Ansible GitOps workflow)
 RUN apk add --upgrade \
     kubectl kustomize helm ansible terraform age pre-commit jq yq \
-    yamllint ansible-lint ipcalc go-task sops flux
+    yamllint ansible-lint ipcalc sops flux
+
+# Install go-task
+RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
 # -{ MOD: Configure userspace environment }
 
