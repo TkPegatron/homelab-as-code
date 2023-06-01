@@ -1,5 +1,19 @@
 # Bootstrap
 
+## Labels
+
+During the creation of the cluster, labels can sometimes be missing from the second and third nodes.
+
+To relabel them, run the following
+
+```sh
+for node in {"amd64-server-7f97c6.int.zynthovian.xyz","amd64-server-a2e7bb.int.zynthovian.xyz"}; do
+    kubectl label nodes $node node-role.kubernetes.io/etcd=true
+    kubectl label nodes $node node-role.kubernetes.io/control-plane=true
+    kubectl label nodes $node node-role.kubernetes.io/master=true
+done
+```
+
 ## Flux
 
 ### Install Flux
