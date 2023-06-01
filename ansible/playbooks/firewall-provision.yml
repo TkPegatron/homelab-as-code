@@ -26,6 +26,8 @@
     - role: dhcp-kea
     - role: fail2ban
     - role: arillso.logrotate
+    - role: routing
+    - role: haproxy
   post_tasks:
     - name: Configure rsyslog to intercept nftables kernel logs
       block:

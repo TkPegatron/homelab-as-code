@@ -1,0 +1,18 @@
+haproxy_servers:
+    - name: kubernetes-api
+      port: "6443"
+      mode: tcp
+      options:
+        - tcplog
+      backend:
+        balance: roundrobin
+        servers:
+            - name: amd64-server-b5915c
+              address: 172.22.0.10
+            - name: amd64-server-7f97c6.int.zynthovian.xyz
+              address: 172.22.0.11
+            - name: amd64-server-a2e7bb.int.zynthovian.xyz
+              address: 172.22.0.12
+        options:
+            - tcplog
+            - tcp-check

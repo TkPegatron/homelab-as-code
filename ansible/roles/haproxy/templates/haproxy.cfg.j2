@@ -1,0 +1,39 @@
+global
+  log /dev/log  local0 warning
+  chroot      /var/lib/haproxy
+  pidfile     /var/run/haproxy.pid
+  maxconn     4000
+  user        haproxy
+  group       haproxy
+  daemon
+  stats socket /var/lib/haproxy/stats
+
+defaults
+  log global
+  option  httplog
+  option  dontlognull
+  timeout connect 5000
+  timeout client 50000
+  timeout server 50000
+
+{% for server in haproxy_servers %}
+frontend {{ server.name }}
+  bind *:{{ server.port }}
+  mode {{ server.mode }}
+  {% for option in server.options %}
+  option {{ option }}
+  {% endfor %}
+  default_backend {{ server.name }}
+
+backend {{ server.name }}
+  mode {{ server.mode }}
+  balance {{ server.backend.balance }}
+  default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+  {% for option in server.backend.options %}
+  option {{ option }}
+  {% endfor %}
+  {% for _server in server.backend.servers %}
+  server {{ _server.name }} {{ _server.address }}:{{ server.port }} check
+  {% endfor %}
+
+{% endfor %}

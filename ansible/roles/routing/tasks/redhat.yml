@@ -1,0 +1,30 @@
+---
+- name: Redhat | Installing FRR repository
+  ansible.builtin.dnf:
+    name: "{{ frr_rpm_repository }}"
+    state: present
+    disable_gpg_check: true
+  become: true
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= "8"
+    - not frr_os_rpm
+
+- name: Redhat | Installing FRR from repository
+  ansible.builtin.dnf:
+    name: "{{ frr_packages }}"
+    state: present
+  become: true
+  notify:
+    - restart frr
+
+- name: Redhat | Touch FRR reload log
+  ansible.builtin.file:
+    path: /var/log/frr/frr-reload.log
+    state: touch
+    owner: frr
+    group: frr
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+  become: true

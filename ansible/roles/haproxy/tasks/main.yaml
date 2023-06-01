@@ -1,0 +1,29 @@
+- name: Tune kernel parameters | Nonlocal Binds
+  ansible.builtin.copy:
+    content: |
+      # -{Allow binding to addresses not assigned to the machine}
+      net.ipv4.ip_nonlocal_bind = 1
+      net.ipv6.ip_nonlocal_bind = 1
+    dest: /etc/sysctl.d/99-nonlocal-bind.conf
+    mode: 0644
+    owner: root
+  notify: "sysctl"
+
+- name: Install system packages
+  ansible.builtin.dnf:
+    name: haproxy
+    state: present
+
+- name: Allow haproxy to bind any port
+  ansible.posix.seboolean:
+    name: haproxy_connect_any
+    persistent: true
+    state: true
+
+- name: Install HAProxy configuration
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    mode: 0644
+  notify: "haproxy"
