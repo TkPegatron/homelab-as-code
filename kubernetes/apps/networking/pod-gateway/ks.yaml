@@ -6,7 +6,7 @@ metadata:
   name: cluster-apps-pod-gateway-downloads
   namespace: flux-system
 spec:
-  path: "./kubernetes/cluster-0/apps/vpn/pod-gateway/downloads"
+  path: ./kubernetes/apps/networking/pod-gateway/downloads
   prune: true
   sourceRef:
     kind: GitRepository
