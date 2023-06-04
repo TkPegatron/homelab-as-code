@@ -52,8 +52,7 @@ spec:
         enabled: true
         type: LoadBalancer
         externalTrafficPolicy: Cluster
-        #externalIPs: ["${SVC_POD_GATEWAY_ADDR}"]
-        externalIPs: ["172.21.0.20"]
+        externalIPs: ["${SVC_POD_GATEWAY_ADDR}"]
         ports:
           shadowsocks:
             enabled: true
