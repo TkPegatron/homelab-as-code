@@ -80,9 +80,9 @@ metadata:
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
       This policy creates annotations on ingresses. When
-      the `external-dns.home.arpa/enabled` annotation is not
-      set it applies the nginx annotations for use with only
-      internal application access.
+      the `external-dns.home.arpa/public` annotation is not
+      set it applies nginx "whitelist" annotations which
+      allow access from rfc1918 addresses.
 spec:
   mutateExistingOnPolicyUpdate: true
   generateExistingOnPolicyUpdate: true
@@ -96,7 +96,7 @@ spec:
         any:
           - resources:
               annotations:
-                external-dns.home.arpa/enabled: "true"
+                external-dns.home.arpa/public: "true"
       mutate:
         targets:
           - apiVersion: networking.k8s.io/v1
