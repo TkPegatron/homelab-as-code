@@ -42,7 +42,7 @@ spec:
       VPN_INTERFACE: "tun0"
     webhook:
       gatewayAnnotation: setGateway
-      gatewayDefault: true
+      gatewayDefault: false
       gatewayLabel: setGateway
       image:
         repository: ghcr.io/angelnu/gateway-admision-controller
@@ -73,6 +73,10 @@ spec:
             value: openvpn
           - name: VPN_ENDPOINT_PORT
             value: 2050
+          - name: FIREWALL
+            value: "off"
+          - name: DOT
+            value: "off"
           - name: OPENVPN_USER
             valueFrom:
               secretKeyRef:
