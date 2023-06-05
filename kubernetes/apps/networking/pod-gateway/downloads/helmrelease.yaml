@@ -40,6 +40,7 @@ spec:
       VPN_BLOCK_OTHER_TRAFFIC: true
       VPN_TRAFFIC_PORT: 2050
       VPN_INTERFACE: "tun0"
+      VXLAN_ID: 43
     webhook:
       gatewayAnnotation: setGateway
       gatewayDefault: false
