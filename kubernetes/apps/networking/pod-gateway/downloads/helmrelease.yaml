@@ -61,7 +61,8 @@ spec:
       vpn:
         enabled: true
         type: gluetun
-        networkPolicy.enabled: false
+        networkPolicy:
+          enabled: false
         gluetun:
           image:
             repository: ghcr.io/qdm12/gluetun
