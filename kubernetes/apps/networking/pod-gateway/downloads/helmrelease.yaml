@@ -37,7 +37,9 @@ spec:
       - downloads
     DNSPolicy: ClusterFirst
     settings:
-      NOT_ROUTED_TO_GATEWAY_CIDRS: 10.0.0.0/8 192.168.0.0/16 172.16.0.0/12
+      NOT_ROUTED_TO_GATEWAY_CIDRS: &local_cidrs >-
+        192.168.0.0/16 172.16.0.0/12 10.0.0.0/8
+      #VPN_LOCAL_CIDRS: *local_cidrs
       VPN_BLOCK_OTHER_TRAFFIC: true
       VPN_TRAFFIC_PORT: 2050
       VPN_INTERFACE: "tun0"
