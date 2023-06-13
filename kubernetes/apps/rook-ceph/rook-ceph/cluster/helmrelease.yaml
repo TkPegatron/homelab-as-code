@@ -110,13 +110,13 @@ spec:
         nodes:
           - name: amd64-server-7f97c6.int.zynthovian.xyz
             devices:
-              - name: /dev/mapper/rook
+              - name: /dev/rook/osd
           - name: amd64-server-a2e7bb.int.zynthovian.xyz
             devices:
-              - name: /dev/mapper/rook
+              - name: /dev/rook/osd
           - name: amd64-server-b5915c.int.zynthovian.xyz
             devices:
-              - name: /dev/mapper/rook
+              - name: /dev/rook/osd
     cephBlockPools:
       - name: ceph-blockpool
         spec:
