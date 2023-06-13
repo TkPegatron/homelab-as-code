@@ -1,4 +1,5 @@
 # Rook-Ceph
 
-At the moment, my cluster lacks the needed compute resources to run a full-featured rook cluster.
-I am using Longhorn to manage PVs instead.
+My cluster now has enough resources to run a ceph deployment.
+
+I am elated, but unfamiliar.
