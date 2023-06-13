@@ -1,2 +1,0 @@
-minio_server_datadirs:
-  - /srv/nfs/media/S3

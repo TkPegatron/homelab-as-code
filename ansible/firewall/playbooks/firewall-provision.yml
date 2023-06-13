@@ -1,0 +1,59 @@
+---
+#- name: "Provision general system configuration"
+#  hosts: firewall
+#  become: true
+#  gather_facts: true
+#  any_errors_fatal: true
+#  vars:
+#    ansible_ssh_user: ansible
+#  roles:
+#    - role: userspace
+
+- name: "Provision hosts as Firewalls"
+  hosts: firewall
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Add nftables configuration to variable
+      ansible.builtin.set_fact:
+        nftables_rules_raw:
+          "{{ lookup('template', 'nftables/main.nft') }}"
+  roles:
+    - role: linux-system-roles.nbde_server
+    - role: geerlingguy.node_exporter
+    - role: nftables-firewall
+    - role: keepalived
+    - role: dhcp-kea
+    - role: fail2ban
+    - role: arillso.logrotate
+    - role: routing
+    - role: haproxy
+  post_tasks:
+    - name: Configure rsyslog to intercept nftables kernel logs
+      block:
+        # Doing this outside a role is a little messy
+        # But since I don't need to do much for it, Id rather this than a role
+        - name: Deploy configuration file
+          loop: "{{ rsyslog_rsyslog_d_files }}"
+          notify: "Restart Rsyslog"
+          ansible.builtin.copy:
+            content: "{{ item.content }}"
+            dest: /etc/rsyslog.d/{{ item.name }}.conf
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=
+    - name: Retreive modified configuration data
+      block:
+        - name: Fetch configuration files
+          loop: "{{ controlled_files }}"
+          when: controlled_files is defined
+          ansible.builtin.fetch:
+            fail_on_missing: false
+            src: "{{ item }}"
+            dest: /tmp/config/
+  handlers:
+    - name: Restart Rsyslog
+      ansible.builtin.service:
+        name: rsyslog.service
+        state: restarted
