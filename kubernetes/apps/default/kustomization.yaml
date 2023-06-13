@@ -10,7 +10,7 @@ resources:
   # - ./actual/ks.yaml
   # - ./cloudnative-pg/ks.yaml
   # - ./glauth/ks.yaml
-  # - ./hajimari/ks.yaml
+  - ./hajimari/ks.yaml
   # - ./homepage/ks.yaml
   # - ./netbox/ks.yaml
   # - ./redis/ks.yaml
