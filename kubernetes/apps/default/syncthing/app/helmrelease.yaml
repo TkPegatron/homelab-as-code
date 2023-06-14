@@ -87,9 +87,9 @@ spec:
         mountPath: /var/syncthing
     resources:
       requests:
-        memory: 75Mi
         cpu: 100m
+        memory: 100Mi
       limits:
         memory: 300Mi
-        cpu: 500m
+        cpu: 200m
 

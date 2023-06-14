@@ -5,7 +5,7 @@ metadata:
   name: vaultwarden
   namespace: default
 spec:
-  storageClassName: ceph-block
+  storageClassName: longhorn
   accessModes:
     - ReadWriteOnce
   resources:

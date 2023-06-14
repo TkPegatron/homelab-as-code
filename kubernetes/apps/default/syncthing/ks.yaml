@@ -6,8 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: cluster-apps-rook-ceph-cluster
-    #- name: cluster-apps-longhorn
+    - name: cluster-apps-longhorn
+    # - name: cluster-apps-rook-ceph-cluster
   path: ./kubernetes/apps/default/syncthing/app
   prune: true
   sourceRef:
