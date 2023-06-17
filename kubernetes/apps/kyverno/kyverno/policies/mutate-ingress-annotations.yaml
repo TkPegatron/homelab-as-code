@@ -7,7 +7,7 @@ metadata:
     policies.kyverno.io/title: Ingress Auth Annotations
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
-      This policy creates auth annotations on ingresses. When
+      This policy creates nginx auth annotations on ingresses. When
       the `auth.home.arpa/enabled` annotation is `true` it
       applies the nginx auth annotations for use with Authelia.
 spec:
@@ -46,10 +46,10 @@ metadata:
     policies.kyverno.io/title: Ingress External-DNS Annotations
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
-      This policy creates external-dns annotations on ingresses.
-      When the `external-dns.home.arpa/enabled` annotation is `true`
-      it applies the external-dns annotations for use with external
-      application access.
+      This policy creates annotations on ingresses.
+      When the `external-dns.home.arpa/public` annotation
+      is set to true, it applies external-dns annotations
+      pointing the resultant name records to the public ip address.
 spec:
   mutateExistingOnPolicyUpdate: true
   generateExistingOnPolicyUpdate: true
@@ -60,7 +60,7 @@ spec:
           - resources:
               kinds: ["Ingress"]
               annotations:
-                external-dns.home.arpa/enabled: "true"
+                external-dns.home.arpa/public: "true"
       mutate:
         targets:
           - apiVersion: networking.k8s.io/v1
@@ -80,9 +80,9 @@ metadata:
     policies.kyverno.io/subject: Ingress
     policies.kyverno.io/description: >-
       This policy creates annotations on ingresses. When
-      the `external-dns.home.arpa/enabled` annotation is not
-      set it applies the nginx annotations for use with only
-      internal application access.
+      the `external-dns.home.arpa/public` annotation is not
+      set to true, it applies nginx "whitelist" annotations which
+      restrict access to hosts within rfc1918 addresses..
 spec:
   mutateExistingOnPolicyUpdate: true
   generateExistingOnPolicyUpdate: true
@@ -96,7 +96,7 @@ spec:
         any:
           - resources:
               annotations:
-                external-dns.home.arpa/enabled: "true"
+                external-dns.home.arpa/public: "true"
       mutate:
         targets:
           - apiVersion: networking.k8s.io/v1
