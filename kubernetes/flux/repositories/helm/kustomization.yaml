@@ -9,6 +9,7 @@ resources:
   - ./bjw-s.yaml
   - ./calico.yaml
   - ./cloudnative-pg.yaml
+  - ./external-dns.yaml
   - ./gitea.yaml
   - ./grafana.yaml
   - ./hajimari.yaml
