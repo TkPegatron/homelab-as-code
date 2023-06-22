@@ -4,9 +4,6 @@
 
 Below are the decrypted versions of the sops encrypted toml files.
 
-> `passbcrypt` can be generated at https://gchq.github.io/CyberChef/#recipe=Bcrypt(12)To_Hex(%27None%27,0)
-
-
 1. `server.sops.toml`
     ```toml
     debug = true
@@ -62,3 +59,17 @@ Below are the decrypted versions of the sops encrypted toml files.
             action = "search"
             object = "*"
     ```
+
+For assigning passwords with bcrypt, the following python should do the trick:
+
+```python
+import bcrypt
+import getpass
+def hash_bcrypt(password):
+    return bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt(14)
+    )
+
+print(hash_bcrypt(getpass.getpass(prompt='Password: ', stream=None)).hex())
+```
