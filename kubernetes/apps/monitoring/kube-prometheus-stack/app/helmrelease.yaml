@@ -76,8 +76,9 @@ spec:
           routes:
             - receiver: "null" # quote
               matchers:
-                - alertname =~ "Watchdog"
-                - alertname =~ "InfoInhibitor"
+                # If I decide to use an uptime system,
+                #  watchdog can be moved to a receiver for it
+                - alertname =~ "InfoInhibitor|Watchdog"
             - receiver: pushover
               matchers:
                 - severity = "critical"
