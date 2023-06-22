@@ -10,15 +10,15 @@ spec:
   sourceRef:
     kind: GitRepository
     name: homelab-as-code
-  interval: 30m
-  retryInterval: 1m
-  timeout: 3m
-  #healthChecks:
-  #  - apiVersion: helm.toolkit.fluxcd.io/v2beta1
-  #    kind: HelmRelease
-  #    name: authelia
-  #    namespace: default
   dependsOn:
     - name: cluster-apps-glauth
     - name: cluster-apps-redis
     - name: cluster-apps-postgres-cluster-default
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+      kind: HelmRelease
+      name: authelia
+      namespace: default
+  interval: 30m
+  retryInterval: 1m
+  timeout: 3m
