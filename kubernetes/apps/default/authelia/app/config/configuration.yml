@@ -1,7 +1,11 @@
 # yaml-language-server: $schema=https://gist.githubusercontent.com/james-d-elliott/756de37a4398b3445072a60d674905c6/raw/ce90833b1ce145cb701184557dd964fa7546f19a/jsonschema.json
 ---
+log:
+  level: info
+
 session:
   redis:
+    database_index: 14
     high_availability:
       sentinel_name: redis-master
       nodes:
@@ -22,6 +26,15 @@ notifier:
   disable_startup_check: false
   filesystem:
     filename: /config/notification.txt
+
+authentication_backend:
+  ldap:
+    url: "ldap://glauth.security.svc.cluster.local:389"
+    attributes:
+      username: uid
+      display_name: givenName
+      group_name: cn
+      mail: mail
 
 identity_providers:
   oidc:
