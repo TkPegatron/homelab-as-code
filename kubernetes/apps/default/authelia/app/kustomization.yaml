@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: default
 resources:
   - ./secret.sops.yaml
+  - ./sauce.sops.yaml
   #- ./helmrelease.yaml
 configMapGenerator:
   - name: authelia-configmap
