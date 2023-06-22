@@ -12,5 +12,5 @@ configMapGenerator:
       - ./config/configuration.yml
 generatorOptions:
   disableNameSuffixHash: true
-patchesStrategicMerge:
-  - ./patches/env.yaml
+patches:
+  - path: ./patches/env.yaml
