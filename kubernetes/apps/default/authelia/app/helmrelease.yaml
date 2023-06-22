@@ -35,7 +35,7 @@ spec:
           - secretRef:
               name: authelia-secret
     controller:
-      replicas: 2
+      replicas: 3
       strategy: RollingUpdate
       annotations:
         reloader.stakater.com/auto: "true"
@@ -43,28 +43,6 @@ spec:
       repository: ghcr.io/authelia/authelia
       tag: master@sha256:f53174c22c46109418fb12df5f420407f1c0f16e784450e4b1c6b68f42cd96bf
     args: ["--config", "/config/configuration.yml", "--config.experimental.filters", "expand-env"]
-    env:
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_ADDITIONAL_USERS_DN: ou=people
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: dc=zynthovian,dc=xyz
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_GROUPS_FILTER: '(&(memberUid={username})(objectClass=posixGroup))'
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_START_TLS: "false"
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_TIMEOUT: 5s
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: cn=glauth,ou=svcaccts,dc=zynthovian,dc=xyz
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USERS_FILTER: '(&({username_attribute}={input})(objectClass=posixAccount))'
-      AUTHELIA_AUTHENTICATION_BACKEND_PASSWORD_RESET_DISABLE: "true"
-      AUTHELIA_AUTHENTICATION_BACKEND_REFRESH_INTERVAL: 1m
-      AUTHELIA_DEFAULT_REDIRECTION_URL: https://auth.zynthovian.xyz
-      AUTHELIA_DUO_API_DISABLE: "true"
-      AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK: "true"
-      AUTHELIA_SERVER_DISABLE_HEALTHCHECK: "true"
-      AUTHELIA_SERVER_PORT: &port 80
-      AUTHELIA_SESSION_DOMAIN: zynthovian.xyz
-      AUTHELIA_SESSION_NAME: authelia-homelab
-      AUTHELIA_TELEMETRY_METRICS_ADDRESS: tcp://0.0.0.0:8080
-      AUTHELIA_TELEMETRY_METRICS_ENABLED: "true"
-      AUTHELIA_THEME: dark
-      AUTHELIA_TOTP_ISSUER: authelia.com
-      AUTHELIA_WEBAUTHN_DISABLE: "true"
     envFrom: *envFrom
     enableServiceLinks: false
     service:
@@ -84,26 +62,12 @@ spec:
             path: /metrics
             interval: 1m
             scrapeTimeout: 10s
-    probes:
-      liveness: &probes
-        enabled: true
-        custom: true
-        spec:
-          httpGet:
-            path: /api/health
-            port: *port
-          initialDelaySeconds: 0
-          periodSeconds: 10
-          timeoutSeconds: 1
-          failureThreshold: 3
-      readiness: *probes
-      startup:
-        enabled: false
     ingress:
       main:
         enabled: true
         ingressClassName: nginx
         annotations:
+          hajimari.io/icon: mdi:shield-account
           external-dns.alpha.kubernetes.io/target: ingress.zynthovian.xyz
           nginx.ingress.kubernetes.io/configuration-snippet: |
             add_header Cache-Control "no-store";
