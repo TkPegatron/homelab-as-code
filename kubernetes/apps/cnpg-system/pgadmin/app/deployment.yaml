@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: pgadmin
-          image: docker.io/dpage/pgadmin4:latest@sha256:8d26cc2be3d00a9c67022c9cf9e555cca14bd8955420b93fdb16dda0da0bcd3e
+          image: docker.io/dpage/pgadmin4:latest@sha256:cf06de4415bfc7b062f537a774a6f1427d50311975dddf8fc555d001b9a94ba0
           securityContext:
             runAsNonRoot: true
             runAsGroup: 5050
