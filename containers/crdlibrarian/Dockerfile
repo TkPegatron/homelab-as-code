@@ -1,4 +1,4 @@
-FROM ghcr.io/tkpegatron/alpine:rolling@sha256:6eb144f3b6059a88dd10fa6826d7c9992d380b5f6007918421b7992cfbb2ba03
+FROM ghcr.io/tkpegatron/alpine:rolling@sha256:6c67d4c548c4e4c67b512c46b93287c1b749324fe692172c1da97bc3c2fb557d
 
 
 RUN apk add --no-cache \
