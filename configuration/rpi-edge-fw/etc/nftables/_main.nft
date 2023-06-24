@@ -1,0 +1,239 @@
+#!/usr/sbin/nft -f
+
+define chromecast = 172.22.110.2
+
+define WAN_IFNAME = "wan"
+define LAN_IFNAME = "lan"
+define IOT_IFNAME = "iot"
+define MAN_IFNAME = "man"
+define WGRA_IFNAME = enp1s0
+
+define ROUTING_IFNAMES = {
+  $WAN_IFNAME, $LAN_IFNAME,
+  $IOT_IFNAME, $MAN_IFNAME,
+  $WGRA_IFNAME
+}
+
+table inet fail2ban {}
+
+table inet attack-mitigation {
+  #? Unfortunately, flowtables are not supported in the aarch64 version of alma yet
+  #flowtable flow_table {
+  #  # -{ 
+  #  #   Utilize flowtable offloading to accelerate forwarding decisions on established connections
+  #  #     All interfaces on which packets are forwarded from must be in the set of devices below
+  #  # }
+  #  hook ingress priority 0; devices = { enp1s0 };
+  #}
+  chain filter-prerouting-attack-mitigation {
+    type filter hook prerouting priority -200; policy accept;
+    
+    
+    #icmp type echo-request counter meta nftrace set 1
+    #ip6 nexthdr icmpv6 counter meta nftrace set 1
+    
+    # ---{ Allow duplicate ICMPv4 and ICMPv6 echo-replies }
+    #? Duplicate replies on multicast/broadcast will be blocked by ct state invalid rules
+    icmp type echo-reply ct state invalid accept
+    icmpv6 type echo-reply ct state invalid accept
+    
+    # -{Offload established connections to the flowtable to accelerate forwarding decisions}
+    #! hw-tc-offload not supported by virtual_Machine/USB NIC
+    #?  Check with ethtool -k $ifname
+    #meta l4proto { tcp, udp } flow offload @flow_table
+    # -{Unconditionally accept loopback trafic}.
+    iiftype loopback accept comment "Accept any loopback traffic"
+    # -{Drop anything with an invalid CT state}
+    ct state invalid counter drop
+    # -{Drop uninitiated non-SYN packets}
+    tcp flags & (fin|syn|rst|ack) != syn ct state new counter drop # \
+      #@log prefix "[NFTABLES] First packet is not SYN." group 0 counter drop
+    # -{Drop xmas attacks}
+    tcp flags & (fin|syn|rst|psh|ack|urg) == fin|syn|rst|psh|ack|urg counter drop
+    # -{Log all traffic coming from the wan interface for PSAD}
+    #iifname wan ct state new log continue
+  }
+}
+
+#table inet suricata {
+#  # -{Support table for suricata IPS}
+#  chain ips-filter-input {
+#    type filter hook input priority -10;
+#    iifname $WAN_IFNAME queue 
+#  }
+#  chain ips-filter-forward {
+#    type filter hook forward priority -10;
+#    iifname $WAN_IFNAME queue
+#  }
+#}
+
+table inet main-filter {
+
+  set unifi_devices {
+    type ether_addr
+    elements = {
+      "e0:63:da:73:76:52"
+    }
+  }
+
+  chain output-filter {
+    type filter hook output priority 0; policy accept;
+  }
+
+  chain input-dispatch-filter {
+    type filter hook input priority 0; policy drop;
+
+    iiftype loopback accept comment "Accept any loopback traffic"
+
+
+    # ---{ Allow ICMPv4 and ICMPv6 echo-replies }
+    #? Duplicate replies on multicast/broadcast will be blocked by ct state invalid rules
+    icmp type {echo-request,echo-reply} ct state invalid accept
+    icmpv6 type {echo-request,echo-reply} ct state invalid accept
+    # ---{ Allow icmpv4 echo-requests }
+    #
+    icmp type echo-request accept
+    #
+    # ---{ ICMPv6 }
+    #
+    icmpv6 type {
+      echo-request,nd-neighbor-solicit,nd-neighbor-advert,nd-router-solicit,
+      nd-router-advert,mld-listener-query,destination-unreachable,
+      packet-too-big,time-exceeded,parameter-problem
+    } accept
+    #
+    # ---{ Match packets based on their contrack state }
+    #
+    ct state vmap {
+      new: continue, invalid: drop,
+      established: accept, related: accept
+    } comment "Accept established and related connections"
+    #
+    # --- { Chain Jump Verdict Specification }
+    #
+    # -{Jumpchain for connections inbound from WAN interface}
+    iifname $WAN_IFNAME jump input-filter-outside
+    # Connections from AP's are allowed to unifi controller
+    ether saddr @unifi_devices jump input-filter-unifi
+    # -{Jumpchain for connections inbound from trusted sources}
+    iifname { $LAN_IFNAME, $MAN_IFNAME } jump input-filter-trusted
+    # -{Jumpchan for connections inbound from all sources}
+    jump input-filter-any
+    #
+    # ---{ Final Verdict }
+    # -{Reject any traffic returning from other chains}
+    log group 2 reject with icmpx type admin-prohibited
+  }
+
+  chain input-filter-any {
+    # -{Allow LLMNR from chromecast for reflection}
+    iifname $IOT_IFNAME ip saddr $chromecast tcp dport { llmnr } counter accept
+    iifname $IOT_IFNAME ip saddr $chromecast udp dport { mdns, llmnr } counter accept
+    # -{Allow wireguard connections}
+    udp dport 51820 accept comment "Wireguard Tunnel traffic"
+    # -{Return unmatched to previous chain}
+    return
+  }
+
+  chain input-filter-outside {
+    # -{Log all traffic coming from the wan interface for PSAD}
+    #ct state new log continue
+    # -{Rate-limit icmp-echo-requests}
+    icmp type \
+      echo-request limit rate 5/second accept
+    icmpv6 type { 
+      nd-neighbor-solicit,
+      echo-request,
+      nd-router-advert,
+      nd-neighbor-advert
+    } limit rate 5/second accept
+    # -{Return unmatched to previous chain}
+    return
+  }
+
+  chain input-filter-trusted {
+    # -{Accept DHCP and DNS connections}
+    udp dport {67,68} accept comment "DHCP"
+    meta l4proto {tcp,udp} th dport 53 accept comment "DNS"
+    meta l4proto {tcp,udp} th dport 5201 accept
+    # -{Accept management services}
+    tcp dport 22 jump log-accept comment "Secure Shell"
+    tcp dport {80,443} jump log-accept comment "Webserver/Pihole"
+    tcp dport {8080,8443} jump log-accept comment "Unifi-controller"
+    tcp dport 179 jump log-accept comment "BGP"
+    # -{Allow NBDE client connections}
+    ip saddr { 172.22.0.3, 172.22.0.10, 172.22.0.11, 172.22.0.12 } meta l4proto {tcp,udp} th dport 6830 accept
+    # -{Return unmatched to previous chain}
+    return
+  }
+
+  chain input-filter-unifi {
+    # -{Accept connections to the unifi controler service}
+    th dport {
+      10001,8080,8443,
+      1900,8843,8880,
+      6789,5514,3478
+    } accept
+    # -{Return unmatched to previous chain}
+    return
+  }
+
+  chain log-accept {
+    # -{Log accepted packets passed to this chain}
+    ct state new log group 1 accept
+  }
+
+  chain forward-filter-chain {
+    type filter hook forward priority 0; policy drop;
+
+    meta nftrace set 1
+
+    # -{Allow outbound connections to be forwarded}
+    iifname { $LAN_IFNAME, $WGRA_IFNAME, $MAN_IFNAME } oifname $WAN_IFNAME\
+      accept comment "Allow outbound traffic"
+
+    # -{Allow inbound initiated connections to be forwarded}
+    iifname $WAN_IFNAME ct state vmap {
+      new: continue, invalid: drop,
+      established: accept, related: accept
+    } comment "Accept established and related connections"
+
+    # -{ Allow intrainterface forwarding }
+    iifname { $LAN_IFNAME, $WGRA_IFNAME, $MAN_IFNAME } \
+    oifname { $LAN_IFNAME, $WGRA_IFNAME, $MAN_IFNAME } \
+    counter accept comment "Allow intrainterface forwarding"
+
+    # -{ Allow the chromecast to make outbound connections}
+    iifname $IOT_IFNAME oifname $WAN_IFNAME ip saddr $chromecast tcp dport { 80, 443 } counter accept
+    iifname $IOT_IFNAME ip saddr $chromecast oifname { $LAN_IFNAME } counter accept
+
+  }
+
+}
+
+table inet nat {
+  chain prerouting {
+    type nat hook prerouting priority -100;
+
+    # -{ Monitor ICMP packets from internal interfaces }
+    iifname $ROUTING_IFNAMES icmp type echo-request meta nftrace set 1 comment "ICMP testing monitor"
+
+    # -{Forward syncthing traffic to the kubernetes ExternalIP}
+    iifname $ROUTING_IFNAMES meta l4proto { tcp, udp } th dport 22000 dnat ip to 172.21.0.1
+
+    # -{Forward HTTP connections to the kubernetes ExternalIP}
+    #iifname $ROUTING_IFNAMES tcp dport {80,443} dnat ip to 172.21.0.0
+
+    # -{Prevent alternative nameservers}
+    iifname {
+      $LAN_IFNAME, $WGRA_IFNAME,
+      $IOT_IFNAME, $MAN_IFNAME
+    } meta l4proto { tcp, udp } th dport 53 dnat ip to 172.22.0.1
+  }
+
+  chain postrouting {
+    type nat hook postrouting priority srcnat;
+    iifname $WGRA_IFNAME oifname $WGRA_IFNAME masquerade comment "Wireguard Hairpin"
+    oifname $WAN_IFNAME counter masquerade comment "Outbound Overload"
+  }
+}

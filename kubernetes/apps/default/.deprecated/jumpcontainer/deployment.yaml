@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jumptainer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jumpbox
+      app.kubernetes.io/instance: elliana
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jumpbox
+        app.kubernetes.io/instance: elliana
+    spec:
+      serviceAccountName: crdstore
+      containers:
+        - name: netbox
+          image: docker.io/nicolaka/netshoot:latest
+          # Keep the container available perpetually
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "trap : TERM INT; sleep 9999999999d & wait" ]
+          resources: {}
+          volumeMounts:
+            - name: nfs-xenia
+              mountPath: /mnt/
+            - name: syncthing
+              mountPath: /opt/
+            - name: files
+              mountPath: /files/
+            - name: files
+              mountPath: /root/motd
+              subPath: motd
+      volumes:
+        - name: syncthing
+          persistentVolumeClaim:
+            claimName: syncthing
+        - name: nfs-xenia
+          nfs:
+            server: xenia.int.zynthovian.xyz
+            path: /srv/nfs/media
+        - name: files
+          configMap:
+            name: jumpcontainer-files

@@ -1,0 +1,16 @@
+[connection]
+id=vlan20
+interface-name=lan
+type=vlan
+uuid=c09943e3-dd8e-4621-934b-c085d1620a23
+autoconnect=true
+read-only=true
+
+[vlan]
+interface-name=lan
+parent=eth0
+id=20
+
+[ipv4]
+method=manual
+address=172.22.1.1/25

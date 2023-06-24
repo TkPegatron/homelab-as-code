@@ -1,0 +1,2544 @@
+diff --git a/.github/workflows/renovate.yaml b/.github/workflows/renovate.yaml
+index daadbf5..f5d66d9 100644
+--- a/.github/workflows/renovate.yaml
++++ b/.github/workflows/renovate.yaml
+@@ -39,7 +39,7 @@ jobs:
+           private_key: "${{ secrets.BOT_APP_PRIVATE_KEY }}"
+ 
+       - name: Checkout
+-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
++        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+         with:
+           token: "${{ steps.generate-token.outputs.token }}"
+ 
+@@ -49,7 +49,7 @@ jobs:
+           echo "LOG_LEVEL=${{ github.event.inputs.logLevel || env.LOG_LEVEL }}" >> "${GITHUB_ENV}"
+ 
+       - name: Renovate
+-        uses: renovatebot/github-action@5aa4bc2e097e751b391105d89ff88c0c80519c1a # v38.1.3
++        uses: renovatebot/github-action@f9a5a67d4271f326b1e80695ea86dd9398b61d58 # v38.1.0
+         with:
+           configurationFile: "${{ env.RENOVATE_CONFIG_FILE }}"
+           token: "${{ steps.generate-token.outputs.token }}"
+diff --git a/ansible/firewall/.envrc b/ansible/firewall/.envrc
+deleted file mode 100644
+index 61ca3e4..0000000
+--- a/ansible/firewall/.envrc
++++ /dev/null
+@@ -1,2 +0,0 @@
+-#shellcheck disable=SC2148,SC2155
+-export ANSIBLE_CONFIG=$(expand_path ./ansible.cfg)
+\ No newline at end of file
+diff --git a/ansible/firewall/ansible.cfg b/ansible/firewall/ansible.cfg
+deleted file mode 100644
+index 2360387..0000000
+--- a/ansible/firewall/ansible.cfg
++++ /dev/null
+@@ -1,36 +0,0 @@
+-[defaults]
+-# General settings
+-nocows                      = True
+-executable                  = /bin/bash
+-stdout_callback             = yaml
+-force_valid_group_names     = ignore
+-# File/Directory settings
+-log_path                    = ~/.ansible/ansible.log
+-inventory                   = ./inventory
+-roles_path                  = ~/.ansible/roles:./roles:../.ansible_roles
+-vault_password_file         = ../../private_keys/ansible/vault-pass
+-collections_path            = ~/.ansible/collections
+-remote_tmp                  = ~/.ansible/tmp
+-local_tmp                   = ~/.ansible/tmp
+-# Fact Caching settings
+-fact_caching                = jsonfile
+-fact_caching_connection     = ~/.ansible/facts_cache
+-# SSH settings
+-remote_port                 = 22
+-timeout                     = 60
+-host_key_checking           = False
+-# Plugin settings
+-vars_plugins_enabled        = host_group_vars,community.sops.sops
+-
+-[inventory]
+-unparsed_is_failed          = true
+-
+-[privilege_escalation]
+-become                      = True
+-
+-[ssh_connection]
+-scp_if_ssh                  = smart
+-retries                     = 3
+-ssh_args                    = -o ControlMaster=auto -o ControlPersist=30m -o Compression=yes -o ServerAliveInterval=15s
+-pipelining                  = True
+-control_path                = %(directory)s/%%h-%%r
+\ No newline at end of file
+diff --git a/ansible/firewall/inventory/hosts.yml b/ansible/firewall/inventory/hosts.yml
+deleted file mode 100644
+index 049ecd8..0000000
+--- a/ansible/firewall/inventory/hosts.yml
++++ /dev/null
+@@ -1,8 +0,0 @@
+----
+-firewall:
+-  hosts:
+-    nftfw-5019d.man.zynthovian.xyz:
+-      #ansible_host: 172.22.0.122
+-      ansible_host: 172.22.1.120
+-    #rpi-fw-edge:
+-    #  ansible_host: 172.22.0.1
+\ No newline at end of file
+diff --git a/ansible/inventory/group_vars/all/os.yaml b/ansible/inventory/group_vars/all/os.yaml
+new file mode 100644
+index 0000000..b929ea2
+--- /dev/null
++++ b/ansible/inventory/group_vars/all/os.yaml
+@@ -0,0 +1,24 @@
++# (string) Timezone for the servers
++timezone: America/Detroit
++
++# (list) Additional ssh public keys to add to the nodes
++ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv"
++
++ansible_ssh_private_key_file: ansible/files/private_keys/ansible-ssh-ed25519
++ansible_user: ansible
++
++provision_users:
++  - name: elliana
++    comment: "Elliana Perry"
++    password: "$6$W80qnfPVcFgNDqVd$R0zpEp9CvC5xKL3NS8L/Sj.82Eq6vAiR720DNtVEZDf8FiR9ulif7sdSv0dC2HtxMw2.kYfRY5IXA6X9Kz05H1"
++    append: true
++    nopasswd: true
++    groups: users,wheel
++    public_ssh_keys: https://github.com/tkpegatron.keys
++  - name: ansible
++    comment: "Ansible Automation"
++    password: "$6$bagegz6oGhX.NTZl$8kiGEh4PaZ0zswgk79rKwgRBJfNCMsOdAtSIyfErDhTXZVlOpJLGaD1oo7rYaiR4mpzZ0EaaputYNH/uhYra71"
++    append: true
++    nopasswd: true
++    groups: wheel
++    public_ssh_keys: "{{ ssh_authorized_keys }}"
+diff --git a/ansible/firewall/inventory/group_vars/all/os.yaml b/ansible/inventory/group_vars/firewall/init.yml
+similarity index 83%
+rename from ansible/firewall/inventory/group_vars/all/os.yaml
+rename to ansible/inventory/group_vars/firewall/init.yml
+index 5304d85..1f1623c 100644
+--- a/ansible/firewall/inventory/group_vars/all/os.yaml
++++ b/ansible/inventory/group_vars/firewall/init.yml
+@@ -4,10 +4,10 @@ timezone: America/Detroit
+ # (list) Additional ssh public keys to add to the nodes
+ ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv"
+ 
+-ansible_ssh_private_key_file: ../../private_keys/ansible/ssh-ed25519
++ansible_ssh_private_key_file: ansible/files/private_keys/ansible-ssh-ed25519
+ ansible_user: ansible
+ 
+-general_users:
++provision_users:
+   - name: elliana
+     comment: "Elliana Perry"
+     password: "$6$W80qnfPVcFgNDqVd$R0zpEp9CvC5xKL3NS8L/Sj.82Eq6vAiR720DNtVEZDf8FiR9ulif7sdSv0dC2HtxMw2.kYfRY5IXA6X9Kz05H1"
+@@ -21,7 +21,7 @@ general_users:
+     append: true
+     nopasswd: true
+     groups: wheel
+-    public_ssh_keys: "{{ lookup('file', '../../private_keys/ansible/ssh-ed25519.pub') }}"
++    public_ssh_keys: "{{ ssh_authorized_keys }}"
+ 
+ install_dotfiles: https://github.com/TkPegatron/dotfiles.git
+ dotfiles_install_script: install.sh
+diff --git a/ansible/kubernetes/inventory/group_vars/all/calico.yml b/ansible/inventory/group_vars/kubernetes/all/calico.yml
+similarity index 100%
+rename from ansible/kubernetes/inventory/group_vars/all/calico.yml
+rename to ansible/inventory/group_vars/kubernetes/all/calico.yml
+diff --git a/ansible/kubernetes/inventory/group_vars/all/k3s.yml b/ansible/inventory/group_vars/kubernetes/all/k3s.yml
+similarity index 54%
+rename from ansible/kubernetes/inventory/group_vars/all/k3s.yml
+rename to ansible/inventory/group_vars/kubernetes/all/k3s.yml
+index 965352c..9636c12 100644
+--- a/ansible/kubernetes/inventory/group_vars/all/k3s.yml
++++ b/ansible/inventory/group_vars/kubernetes/all/k3s.yml
+@@ -21,7 +21,7 @@ k3s_debug: false
+ k3s_etcd_datastore: true
+ 
+ # (bool) Allow the use of unsupported configurations in k3s
+-#k3s_use_unsupported_config: true
++k3s_use_unsupported_config: true
+ 
+ # (string) Control Plane registration address
+ k3s_registration_address: 172.22.0.1
+@@ -30,33 +30,29 @@ k3s_registration_address: 172.22.0.1
+ k3s_server_manifests_urls:
+   # Tigera Operator
+   - url: https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
+-    filename: custom-calico-tigera-operator.yaml
++    filename: calico-tigera-operator.yaml
+   # Prometheus Operator
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+-    filename: custom-prometheus-alertmanagerconfigs.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+-    filename: custom-prometheus-alertmanagers.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+-    filename: custom-prometheus-podmonitors.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
+-    filename: custom-prometheus-probes.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+-    filename: custom-prometheus-prometheuses.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+-    filename: custom-prometheus-prometheusrules.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+-    filename: custom-prometheus-servicemonitors.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+-    filename: custom-prometheus-thanosrulers.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
+-    filename: custom-prometheus-scrapeconfigs.yaml
+-  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.65.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
+-    filename: custom-prometheus-prometheusagents.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
++    filename: prometheus-alertmanagerconfigs.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
++    filename: prometheus-alertmanagers.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
++    filename: prometheus-podmonitors.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
++    filename: prometheus-probes.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
++    filename: prometheus-prometheuses.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
++    filename: prometheus-prometheusrules.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
++    filename: prometheus-servicemonitors.yaml
++  - url: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.61.1/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
++    filename: prometheus-thanosrulers.yaml
+ 
+ # (list) A flat list of templates to deploy on the primary control plane
+ # /var/lib/rancher/k3s/server/manifests
+ k3s_server_manifests_templates:
+-  - calico-installation.yaml.j2
+-  - calico-bgpconfiguration.yaml.j2
+-  - calico-bgppeer.yaml.j2
+-#  - calico-ebpf.yaml.j2
++  - ../templates/kubernetes/calico-installation.yaml.j2
++  - ../templates/kubernetes/calico-bgpconfiguration.yaml.j2
++  - ../templates/kubernetes/calico-bgppeer.yaml.j2
++  - ../templates/kubernetes/calico-ebpf.yaml.j2
+diff --git a/ansible/inventory/group_vars/kubernetes/all/nbde.yml b/ansible/inventory/group_vars/kubernetes/all/nbde.yml
+new file mode 100644
+index 0000000..d52d390
+--- /dev/null
++++ b/ansible/inventory/group_vars/kubernetes/all/nbde.yml
+@@ -0,0 +1,7 @@
++luks_admin_password: !vault |
++          $ANSIBLE_VAULT;1.1;AES256
++          39376365353662383438616437626564313664636264666163353137303766356531313533363964
++          3535643865313232396434356331663532623133653664320a653332326165613232613437336161
++          39333563326265633235346133343332613234316162663433336334636236323161633864643064
++          6139353130396636380a623739653436386535666336613735343264353232616439323033303833
++          30656237363366623264633133346639663131666264313035353130376336373338
+diff --git a/ansible/kubernetes/inventory/group_vars/all/os.yml b/ansible/inventory/group_vars/kubernetes/all/os.yml
+similarity index 88%
+rename from ansible/kubernetes/inventory/group_vars/all/os.yml
+rename to ansible/inventory/group_vars/kubernetes/all/os.yml
+index 4515b8c..2955686 100644
+--- a/ansible/kubernetes/inventory/group_vars/all/os.yml
++++ b/ansible/inventory/group_vars/kubernetes/all/os.yml
+@@ -5,7 +5,7 @@ timezone: America/Detroit
+ # (list) Additional ssh public keys to add to the nodes
+ ssh_authorized_keys: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOkCJxXefrBTfQdc8vr1X95ZNEhP1BlRbVGXgVfjDcbv"
+ 
+-ansible_ssh_private_key_file: ../../private_keys/ansible/ssh-ed25519
++ansible_ssh_private_key_file: ansible/files/private_keys/ansible-ssh-ed25519
+ ansible_user: ansible
+ 
+ system_packages:
+diff --git a/ansible/kubernetes/inventory/group_vars/master/k3s.yml b/ansible/inventory/group_vars/kubernetes/master/k3s.yml
+similarity index 79%
+rename from ansible/kubernetes/inventory/group_vars/master/k3s.yml
+rename to ansible/inventory/group_vars/kubernetes/master/k3s.yml
+index f64af42..956d818 100644
+--- a/ansible/kubernetes/inventory/group_vars/master/k3s.yml
++++ b/ansible/inventory/group_vars/kubernetes/master/k3s.yml
+@@ -10,8 +10,6 @@ k3s_server:
+   node-ip: "{{ ansible_host }}"
+   tls-san:
+     - "{{ k3s_registration_address }}"
+-    - "kubeapi.zynthovian.xyz"
+-    - "k8s.zynthovian.xyz"
+   https-listen-port: "6443"
+   # Disable Docker - this will use the default containerd CRI
+   docker: false
+@@ -29,7 +27,7 @@ k3s_server:
+     - traefik
+   disable-network-policy: true
+   disable-cloud-controller: true
+-  write-kubeconfig-mode: "0644"
++  write-kubeconfig-mode: "644"
+   # Network CIDR to use for pod IPs
+   cluster-cidr: "10.42.0.0/16"
+   # Network CIDR to use for service IPs
+@@ -37,6 +35,10 @@ k3s_server:
+   kube-controller-manager-arg:
+     # Required to monitor kube-controller-manager with kube-prometheus-stack
+     - "bind-address=0.0.0.0"
++    # https://github.com/k3s-io/k3s/issues/1264
++    - "node-monitor-period=4s"
++    - "node-monitor-grace-period=16s"
++    - "pod-eviction-timeout=20s"
+   kube-proxy-arg:
+     # Required to monitor kube-proxy with kube-prometheus-stack
+     - "metrics-bind-address=0.0.0.0"
+@@ -48,3 +50,9 @@ k3s_server:
+   kube-apiserver-arg:
+     # Required for HAProxy health-checks
+     - "anonymous-auth=true"
++    # https://github.com/k3s-io/k3s/issues/1264
++    - "default-not-ready-toleration-seconds=20"
++    - "default-unreachable-toleration-seconds=20"
++  kubelet-arg:
++    # https://github.com/k3s-io/k3s/issues/1264
++    - "node-status-update-frequency=4s"
+diff --git a/ansible/kubernetes/inventory/group_vars/worker/k3s.yml b/ansible/inventory/group_vars/kubernetes/worker/k3s.yml
+similarity index 75%
+rename from ansible/kubernetes/inventory/group_vars/worker/k3s.yml
+rename to ansible/inventory/group_vars/kubernetes/worker/k3s.yml
+index d2a44e0..8849c68 100644
+--- a/ansible/kubernetes/inventory/group_vars/worker/k3s.yml
++++ b/ansible/inventory/group_vars/kubernetes/worker/k3s.yml
+@@ -8,3 +8,6 @@ k3s_control_node: false
+ # (dict) k3s settings for all worker nodes
+ k3s_agent:
+   node-ip: "{{ ansible_host }}"
++  kubelet-arg:
++    # https://github.com/k3s-io/k3s/issues/1264
++    - "node-status-update-frequency=4s"
+diff --git a/ansible/kubernetes/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml b/ansible/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml
+similarity index 90%
+rename from ansible/kubernetes/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml
+rename to ansible/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml
+index 844a474..266f95f 100644
+--- a/ansible/kubernetes/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml
++++ b/ansible/inventory/host_vars/amd64-server-7f97c6.int.zynthovian.xyz.yml
+@@ -1,5 +1,5 @@
+ nbde_client_bindings:
+-  - device: /dev/disk/by-uuid/9f735f65-b35c-4192-ae16-6dd2dcbf0469
++  - device: /dev/disk/by-uuid/1ccb1a48-aaa5-49d4-8b98-7445a2b162c6
+     slot: 7
+     encryption_password: !vault |
+           $ANSIBLE_VAULT;1.1;AES256
+diff --git a/ansible/kubernetes/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml b/ansible/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml
+similarity index 90%
+rename from ansible/kubernetes/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml
+rename to ansible/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml
+index 575f308..50dfccd 100644
+--- a/ansible/kubernetes/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml
++++ b/ansible/inventory/host_vars/amd64-server-a2e7bb.int.zynthovian.xyz.yml
+@@ -1,5 +1,5 @@
+ nbde_client_bindings:
+-  - device: /dev/disk/by-uuid/f17725db-ac9c-4d10-a544-b9da611d13ba
++  - device: /dev/disk/by-uuid/28b1a75f-4af1-4c2c-bf0a-caef8d1b8e4a
+     slot: 7
+     encryption_password: !vault |
+           $ANSIBLE_VAULT;1.1;AES256
+diff --git a/ansible/kubernetes/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml b/ansible/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml
+similarity index 86%
+rename from ansible/kubernetes/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml
+rename to ansible/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml
+index 9e986e9..9ccd3b6 100644
+--- a/ansible/kubernetes/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml
++++ b/ansible/inventory/host_vars/amd64-server-b5915c.int.zynthovian.xyz.yml
+@@ -1,5 +1,5 @@
+ nbde_client_bindings:
+-  - device: /dev/disk/by-uuid/6213ab91-9ee6-40b3-ad41-b7ea4c6bbe30
++  - device: /dev/disk/by-uuid/82c5bde8-d36f-4de8-b50a-440b3e751d92
+     slot: 7
+     encryption_password: !vault |
+           $ANSIBLE_VAULT;1.1;AES256
+@@ -10,4 +10,4 @@ nbde_client_bindings:
+           32363232643561313835613036656566663738373363366638353136343834353930666433636665
+           6538333061633033323838383062346333363338346538303765
+     servers:
+-      - http://172.22.0.120:6830
++      - http://172.22.0.1:6830
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/fail2ban-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/fail2ban-config.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/fail2ban-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/fail2ban-config.yml
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/frr-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/frr-config.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/frr-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/frr-config.yml
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/general-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/general-config.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/general-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/general-config.yml
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/haproxy_servers.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/haproxy_servers.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/haproxy_servers.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/haproxy_servers.yml
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml
+similarity index 97%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml
+index 293d123..d2a4e59 100644
+--- a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml
++++ b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/kea-dhcp-server-config.yml
+@@ -76,7 +76,7 @@ kea_dhcp4_config:
+         option-data:
+         -   data: 172.22.0.1
+             name: routers
+-        -   data: 172.22.0.1,1.1.1.1,9.9.9.9,8.8.8.8
++        -   data: 1.1.1.1,9.9.9.9,8.8.8.8
+             name: domain-name-servers
+         pools:
+         -   pool: 172.22.0.20-172.22.0.99
+@@ -104,7 +104,7 @@ kea_dhcp4_config:
+         option-data:
+         -   data: 172.22.1.1
+             name: routers
+-        -   data: 172.22.1.1,1.1.1.1,9.9.9.9,8.8.8.8
++        -   data: 1.1.1.1,9.9.9.9,8.8.8.8
+             name: domain-name-servers
+         pools:
+         -   pool: 172.22.1.10-172.22.1.110
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/keepalived-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/keepalived-config.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/keepalived-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/keepalived-config.yml
+diff --git a/ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/nbde-config.yml b/ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/nbde-config.yml
+similarity index 100%
+rename from ansible/firewall/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/nbde-config.yml
+rename to ansible/inventory/host_vars/nftfw-5019d.man.zynthovian.xyz/nbde-config.yml
+diff --git a/ansible/inventory/host_vars/xenia.int.xynthovian.xyz.yml b/ansible/inventory/host_vars/xenia.int.xynthovian.xyz.yml
+new file mode 100644
+index 0000000..c5b7e03
+--- /dev/null
++++ b/ansible/inventory/host_vars/xenia.int.xynthovian.xyz.yml
+@@ -0,0 +1,2 @@
++minio_server_datadirs:
++  - /srv/nfs/media/S3
+diff --git a/ansible/kubernetes/inventory/hosts.yml b/ansible/inventory/hosts.yml
+similarity index 57%
+rename from ansible/kubernetes/inventory/hosts.yml
+rename to ansible/inventory/hosts.yml
+index 92125b9..3777497 100644
+--- a/ansible/kubernetes/inventory/hosts.yml
++++ b/ansible/inventory/hosts.yml
+@@ -1,7 +1,19 @@
+ ---
++firewall:
++  hosts:
++    nftfw-5019d.man.zynthovian.xyz:
++      #ansible_host: 172.22.0.122
++      ansible_host: 172.22.1.120
++    #rpi-fw-edge:
++    #  ansible_host: 172.22.0.1
++nas:
++  hosts:
++    xenia.int.xynthovian.xyz:
++      ansible_host: 172.22.0.3
+ kubernetes:
+   children:
+     master:
++      vars:
+       hosts:
+         amd64-server-b5915c.int.zynthovian.xyz:
+           # StackPos: 0
+@@ -15,4 +27,4 @@ kubernetes:
+     worker:
+       hosts:
+         # Example
+-        # amd64-worker-{{ intfid }}.{{ fqdn }}:
+\ No newline at end of file
++        # amd64-worker-{{ intfid }}.{{ fqdn }}:
+diff --git a/ansible/kubernetes/.envrc b/ansible/kubernetes/.envrc
+deleted file mode 100644
+index 61ca3e4..0000000
+--- a/ansible/kubernetes/.envrc
++++ /dev/null
+@@ -1,2 +0,0 @@
+-#shellcheck disable=SC2148,SC2155
+-export ANSIBLE_CONFIG=$(expand_path ./ansible.cfg)
+\ No newline at end of file
+diff --git a/ansible/kubernetes/ansible.cfg b/ansible/kubernetes/ansible.cfg
+deleted file mode 100644
+index 2360387..0000000
+--- a/ansible/kubernetes/ansible.cfg
++++ /dev/null
+@@ -1,36 +0,0 @@
+-[defaults]
+-# General settings
+-nocows                      = True
+-executable                  = /bin/bash
+-stdout_callback             = yaml
+-force_valid_group_names     = ignore
+-# File/Directory settings
+-log_path                    = ~/.ansible/ansible.log
+-inventory                   = ./inventory
+-roles_path                  = ~/.ansible/roles:./roles:../.ansible_roles
+-vault_password_file         = ../../private_keys/ansible/vault-pass
+-collections_path            = ~/.ansible/collections
+-remote_tmp                  = ~/.ansible/tmp
+-local_tmp                   = ~/.ansible/tmp
+-# Fact Caching settings
+-fact_caching                = jsonfile
+-fact_caching_connection     = ~/.ansible/facts_cache
+-# SSH settings
+-remote_port                 = 22
+-timeout                     = 60
+-host_key_checking           = False
+-# Plugin settings
+-vars_plugins_enabled        = host_group_vars,community.sops.sops
+-
+-[inventory]
+-unparsed_is_failed          = true
+-
+-[privilege_escalation]
+-become                      = True
+-
+-[ssh_connection]
+-scp_if_ssh                  = smart
+-retries                     = 3
+-ssh_args                    = -o ControlMaster=auto -o ControlPersist=30m -o Compression=yes -o ServerAliveInterval=15s
+-pipelining                  = True
+-control_path                = %(directory)s/%%h-%%r
+\ No newline at end of file
+diff --git a/ansible/kubernetes/inventory/group_vars/all/nbde.yml b/ansible/kubernetes/inventory/group_vars/all/nbde.yml
+deleted file mode 100644
+index 14f1a68..0000000
+--- a/ansible/kubernetes/inventory/group_vars/all/nbde.yml
++++ /dev/null
+@@ -1,26 +0,0 @@
+-luks_admin_password: !vault |
+-          $ANSIBLE_VAULT;1.1;AES256
+-          39376365353662383438616437626564313664636264666163353137303766356531313533363964
+-          3535643865313232396434356331663532623133653664320a653332326165613232613437336161
+-          39333563326265633235346133343332613234316162663433336334636236323161633864643064
+-          6139353130396636380a623739653436386535666336613735343264353232616439323033303833
+-          30656237363366623264633133346639663131666264313035353130376336373338
+-
+-# The values below are an attempt to override the NBDE vars,
+-#   I have not tested this and likely wont until the next time my devcontainer is rebuilt
+-#   The role from RedHat does not otherwise support Rocky as it does not equate Rocky and RHEL
+-
+-__nbde_client_packages:
+-  - clevis
+-  - clevis-dracut
+-  - clevis-luks
+-  - clevis-systemd
+-  - iproute
+-  - NetworkManager
+-
+-__nbde_client_initramfs_update_cmd: >
+-  dracut -fv --regenerate-all
+-
+-__nbde_client_dracut_settings:
+-  - kernel_cmdline+=" rd.neednet=1 "
+-  - omit_dracutmodules+=" ifcfg "
+\ No newline at end of file
+diff --git a/ansible/kubernetes/playbooks/cluster-deprovision.yml b/ansible/playbooks/cluster-deprovision.yml
+similarity index 100%
+rename from ansible/kubernetes/playbooks/cluster-deprovision.yml
+rename to ansible/playbooks/cluster-deprovision.yml
+diff --git a/ansible/kubernetes/playbooks/cluster-prepare.yml b/ansible/playbooks/cluster-prepare.yml
+similarity index 62%
+rename from ansible/kubernetes/playbooks/cluster-prepare.yml
+rename to ansible/playbooks/cluster-prepare.yml
+index 8fb1808..62f3796 100644
+--- a/ansible/kubernetes/playbooks/cluster-prepare.yml
++++ b/ansible/playbooks/cluster-prepare.yml
+@@ -22,13 +22,8 @@
+             block: |
+               127.0.1.1   {{ inventory_hostname }}
+     - name: Packages | RHEL
+-      when: ansible_facts['distribution'] in ['Fedora', 'Rocky']
++      when: ansible_facts['distribution'] in ['Fedora','Rocky']
+       block:
+-        - name: Packages | Install EPEL
+-          ansible.builtin.dnf:
+-            name: epel-release
+-            state: present
+-            update_cache: true
+         - name: Packages | Install required packages
+           ansible.builtin.dnf:
+             name: "{{ system_packages | default([]) }}"
+@@ -37,25 +32,19 @@
+         - name: Packages | Remove leaf packages
+           ansible.builtin.dnf:
+             autoremove: true
+-
+     - name: System Configuration (1)
+       block:
+-        #- name: Configure Users
+-        #  ansible.builtin.include_role:
+-        #    name: userspace
+-        #    public: true
+         - name: System Configuration (1) | Disable firewalld | Fedora
+           ansible.builtin.systemd:
+             service: firewalld.service
+             enabled: false
+             masked: true
+             state: stopped
+-          when: ansible_facts['distribution'] in ['Fedora', 'Rocky']
++          when: ansible_facts['distribution'] in ['Fedora','Rocky']
+         - name: System Configuration (1) | Enable fstrim
+           ansible.builtin.systemd:
+             service: fstrim.timer
+             enabled: true
+-
+     - name: System Configuration (2)
+       notify: Reboot
+       block:
+@@ -66,7 +55,7 @@
+           loop: [br_netfilter, overlay, rbd]
+         - name: System Configuration (2) | Enable kernel modules on boot
+           ansible.builtin.copy:
+-            mode: "0644"
++            mode: 0644
+             content: "{{ item }}"
+             dest: "/etc/modules-load.d/{{ item }}.conf"
+           loop: [br_netfilter, overlay, rbd]
+@@ -92,13 +81,70 @@
+           ansible.builtin.dnf:
+             name: zram-generator-defaults
+             state: absent
+-          when: ansible_facts['distribution'] in ['Fedora', 'Rocky']
++          when: ansible_facts['distribution'] in ['Fedora','Rocky']
+         - name: System Configuration (2) | Disable swap at runtime | Ubuntu
+           ansible.builtin.command: swapoff -a
+           when:
+             - ansible_facts['distribution'] == 'Ubuntu'
+             - ansible_swaptotal_mb > 0
+-
++        # ? Don't (vv srs)
++        # - name: System Configuration (2) | Permissive SELinux | Fedora
++        #   ansible.posix.selinux:
++        #     state: permissive
++        #     policy: targeted
++        #   when: ansible_facts['distribution'] == 'Fedora'
++    # - name: System Configuration (3)
++    #   when: k3s_control_node
++    #   block:
++    #     - name: System Configuration (3) | HA Proxy | Install software
++    #       ansible.builtin.dnf:
++    #         name: [keepalived, haproxy]
++    #         state: present
++    #     - name: System Configuration (3) | HA Proxy | Tune sysctls
++    #       ansible.posix.sysctl:
++    #         name: "{{ item.key }}"
++    #         value: "{{ item.value }}"
++    #         sysctl_file: /etc/sysctl.d/99-haproxy.conf
++    #         reload: true
++    #       with_dict: "{{ sysctl_config }}"
++    #       vars:
++    #         sysctl_config:
++    #           net.ipv4.ip_nonlocal_bind: 1
++    #           net.ipv6.ip_nonlocal_bind: 1
++    #     - name: System Configuration (3) | HA Proxy | Tune Selinux Bools
++    #       ansible.builtin.shell: |
++    #         if [[ "$(getsebool haproxy_connect_any | grep 'off$' -q; echo $?)" == 0 ]]; then
++    #           #? if 'off', set bool
++    #           setsebool -P haproxy_connect_any=1
++    #           echo "changed"; exit
++    #         fi
++    #         echo "unchanged"; exit
++    #       register: haproxy_sebool
++    #       changed_when: haproxy_sebool.stdout == "changed"
++    #     - name: System Configuration (3) | HA Proxy | Get control-plane nodes
++    #       ansible.builtin.set_fact:
++    #         kube_api_nodes: "{{ hostvars | dict2items | json_query(jmes_query_kube_api_nodes) }}"
++    #       vars:
++    #         jmes_query_kube_api_nodes: "[?value.group_names[?contains(@, 'master') == `true`]].[key,value]"
++    #     # This probably isnt DRY enough
++    #     - name: System configuration (3) | HA Proxy | Install configuration
++    #       notify: Reboot
++    #       ansible.builtin.template:
++    #         src: "{{ item.key }}"
++    #         dest: "{{ item.value }}"
++    #         owner: root
++    #         mode: 0644
++    #       with_dict: "{{ ha_config_files }}"
++    #       vars:
++    #         ha_config_files:
++    #           haproxy.cfg.j2: /etc/haproxy/haproxy.cfg
++    #           keepalived.conf.j2: /etc/keepalived/keepalived.conf
++    #     - name: System configuration (3) | HA Proxy | Enable services
++    #       ansible.builtin.systemd:
++    #         name: "{{ item }}"
++    #         state: started
++    #         enabled: true
++    #       with_items: ['keepalived', 'haproxy']
+     - name: System Configuration (3) | Network Bound Disk Encryption
+       block:
+         - name: System Configuration (3) | NBDE | Rotate LUKS Keys
+diff --git a/ansible/kubernetes/playbooks/cluster-provision.yml b/ansible/playbooks/cluster-provision.yml
+similarity index 77%
+rename from ansible/kubernetes/playbooks/cluster-provision.yml
+rename to ansible/playbooks/cluster-provision.yml
+index fa0740e..40b1104 100644
+--- a/ansible/kubernetes/playbooks/cluster-provision.yml
++++ b/ansible/playbooks/cluster-provision.yml
+@@ -6,7 +6,36 @@
+   become: true
+   gather_facts: true
+   any_errors_fatal: true
++  pre_tasks:
++    - name: Pausing for 2 seconds...
++      ansible.builtin.pause:
++        seconds: 2
+   tasks:
++    - name: Check if cluster is installed
++      ansible.builtin.stat:
++        path: /etc/rancher/k3s/config.yaml
++      register: k3s_check_installed
++      check_mode: false
++
++    - name: Set manifest facts
++      ansible.builtin.set_fact:
++        k3s_server_manifests_templates: []
++        k3s_server_manifests_urls: []
++      when: k3s_check_installed.stat.exists | default(true)
++
++    - name: Create the k3s data directory
++      ansible.builtin.file:
++        path: /var/lib/rancher/k3s
++        state: directory
++        owner: root
++        group: root
++        mode: 0755
++
++    - name: Copy audit-policy.yaml
++      ansible.builtin.template:
++        src: "{{ playbook_dir }}/../templates/kubernetes/audit-policy.yaml.j2"
++        dest: /var/lib/rancher/k3s/audit-policy.yaml
++        mode: 0755
+ 
+     - name: Install Kubernetes
+       ansible.builtin.include_role:
+@@ -19,7 +48,7 @@
+       run_once: true
+       ansible.builtin.fetch:
+         src: /etc/rancher/k3s/k3s.yaml
+-        dest: "{{ playbook_dir }}/../../../private_keys/kubeconfig"
++        dest: "{{ playbook_dir }}/../../private_keys/kubeconfig"
+         flat: true
+       when:
+         - k3s_control_node is defined
+@@ -30,7 +59,7 @@
+       become: false
+       run_once: true
+       ansible.builtin.replace:
+-        path: "{{ playbook_dir }}/../../../private_keys/kubeconfig"
++        path: "{{ playbook_dir }}/../../private_keys/kubeconfig"
+         regexp: "https://127.0.0.1:{{ k3s_server['https-listen-port'] }}"
+         replace: "https://{{ k3s_registration_address }}:{{ k3s_server['https-listen-port'] }}"
+ 
+@@ -70,10 +99,6 @@
+           name: servicemonitors.monitoring.coreos.com
+         - kind: CustomResourceDefinition
+           name: thanosrulers.monitoring.coreos.com
+-        - kind: CustomResourceDefinition
+-          name: scrapeconfigs.monitoring.coreos.com
+-        - kind: CustomResourceDefinition
+-          name: prometheusagents.monitoring.coreos.com
+       register: resource_check
+       when:
+         - k3s_server_manifests_templates | length > 0
+diff --git a/ansible/playbooks/cluster-reboot.yml b/ansible/playbooks/cluster-reboot.yml
+new file mode 100644
+index 0000000..1fcbf0f
+--- /dev/null
++++ b/ansible/playbooks/cluster-reboot.yml
+@@ -0,0 +1,16 @@
++---
++- hosts:
++    - master
++    - worker
++  become: true
++  gather_facts: true
++  any_errors_fatal: true
++  pre_tasks:
++    - name: Pausing for 5 seconds...
++      ansible.builtin.pause:
++        seconds: 5
++  tasks:
++    - name: Reboot
++      ansible.builtin.reboot:
++        msg: ANSIBLE is Rebooting KubeAPI Nodes
++        reboot_timeout: 3600
+diff --git a/ansible/firewall/playbooks/firewall-provision.yml b/ansible/playbooks/firewall-provision.yml
+similarity index 84%
+rename from ansible/firewall/playbooks/firewall-provision.yml
+rename to ansible/playbooks/firewall-provision.yml
+index 5d3049f..4079146 100644
+--- a/ansible/firewall/playbooks/firewall-provision.yml
++++ b/ansible/playbooks/firewall-provision.yml
+@@ -1,13 +1,12 @@
+----
+-#- name: "Provision general system configuration"
+-#  hosts: firewall
+-#  become: true
+-#  gather_facts: true
+-#  any_errors_fatal: true
+-#  vars:
+-#    ansible_ssh_user: ansible
+-#  roles:
+-#    - role: userspace
++- name: "Provision general system configuration"
++  hosts: firewall
++  become: true
++  gather_facts: true
++  any_errors_fatal: true
++  vars:
++    ansible_ssh_user: ansible
++  roles:
++    - role: userspace
+ 
+ - name: "Provision hosts as Firewalls"
+   hosts: firewall
+@@ -18,7 +17,7 @@
+     - name: Add nftables configuration to variable
+       ansible.builtin.set_fact:
+         nftables_rules_raw:
+-          "{{ lookup('template', 'nftables/main.nft') }}"
++          "{{ lookup('template', '../templates/nftables/main.nft') }}"
+   roles:
+     - role: linux-system-roles.nbde_server
+     - role: geerlingguy.node_exporter
+diff --git a/ansible/playbooks/general-users.yaml b/ansible/playbooks/general-users.yaml
+new file mode 100644
+index 0000000..0197983
+--- /dev/null
++++ b/ansible/playbooks/general-users.yaml
+@@ -0,0 +1,71 @@
++---
++- name: "Prepare hosts to become cluter members"
++  hosts: firewall
++  become: true
++  gather_facts: true
++  any_errors_fatal: true
++  vars:
++    ansible_ssh_user: ansible
++  tasks:
++    - name: Locale
++      block:
++        - name: Locale | Set timezone
++          community.general.timezone:
++            name: "{{ timezone | default('Etc/UTC') }}"
++    - name: System Configuration
++      block:
++        - name: System Configuration | Install EPEL Repo
++          ansible.builtin.dnf:
++            name: "epel-release"
++            state: present
++            update_cache: true
++        - name: System Configuration | Install System Packages
++          ansible.builtin.dnf:
++            name: "{{ system_packages | default([]) }}"
++            state: present
++            update_cache: true
++    - name: User Configuration
++      block:
++        - name: User Configuration | Create user account
++          ansible.builtin.user:
++            name: "{{ item.name }}"
++            comment: "{{ item.comment | default(omit) }}"
++            password: "{{ item.password }}"
++            append: "{{ item.append | default(omit) }}"
++            groups: "{{ item.groups | default('users') }}"
++          loop: "{{ provision_users }}"
++        - name: User Configuration | Allow user to sudo without password
++          ansible.builtin.copy:
++            content: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
++            dest: "/etc/sudoers.d/{{ item.name }}"
++            mode: 0644
++            owner: root
++            group: root
++          when: item.nopasswd == true
++          loop: "{{ provision_users }}"
++        - name: User Configuration | Add SSH public keys
++          ansible.posix.authorized_key:
++            user: "{{ item.name }}"
++            key: "{{ item.public_ssh_keys }}"
++          when: item.public_ssh_keys != ""
++          loop: "{{ provision_users }}"
++        - name: User Configuration | Install Dotfiles
++          when: install_dotfiles != ""
++          block:
++            - name: Ensure Dependencies are Available
++              ansible.builtin.dnf:
++                name: "{{ dotfiles_prereqs }}"
++                state: present
++              #loop: "{{ provision_users }}"
++            - name: Clone repository into $HOME
++              loop: "{{ provision_users }}"
++              become_user: "{{ item.name }}"
++              ansible.builtin.git:
++                repo: "{{ install_dotfiles }}"
++                dest: "/home/{{ item.name }}/.dotfiles"
++            - name: Execute Installation Script
++              loop: "{{ provision_users }}"
++              become_user: "{{ item.name }}"
++              ansible.builtin.shell: "./install.sh"
++              args:
++                chdir: "/home/{{ item.name }}/.dotfiles"
+diff --git a/ansible/playbooks/nas-provision.yml b/ansible/playbooks/nas-provision.yml
+new file mode 100644
+index 0000000..e426cc8
+--- /dev/null
++++ b/ansible/playbooks/nas-provision.yml
+@@ -0,0 +1,11 @@
++---
++- name: MinIO Installation
++  hosts: nas
++  become: true
++  gather_facts: true
++  any_errors_fatal: true
++  tasks:
++
++    - name: Install MinIO Server
++      ansible.builtin.include_role:
++        name: minio
+diff --git a/ansible/firewall/roles/dhcp-kea/defaults/main.yml b/ansible/roles/dhcp-kea/defaults/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/defaults/main.yml
+rename to ansible/roles/dhcp-kea/defaults/main.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/handlers/main.yml b/ansible/roles/dhcp-kea/handlers/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/handlers/main.yml
+rename to ansible/roles/dhcp-kea/handlers/main.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/ctrl-agent.yml b/ansible/roles/dhcp-kea/tasks/ctrl-agent.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/ctrl-agent.yml
+rename to ansible/roles/dhcp-kea/tasks/ctrl-agent.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/ddns.yml b/ansible/roles/dhcp-kea/tasks/ddns.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/ddns.yml
+rename to ansible/roles/dhcp-kea/tasks/ddns.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/dhcp4-server.yml b/ansible/roles/dhcp-kea/tasks/dhcp4-server.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/dhcp4-server.yml
+rename to ansible/roles/dhcp-kea/tasks/dhcp4-server.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/dhcp6-server.yml b/ansible/roles/dhcp-kea/tasks/dhcp6-server.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/dhcp6-server.yml
+rename to ansible/roles/dhcp-kea/tasks/dhcp6-server.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/main.yml b/ansible/roles/dhcp-kea/tasks/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/main.yml
+rename to ansible/roles/dhcp-kea/tasks/main.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/tasks/package-management.yml b/ansible/roles/dhcp-kea/tasks/package-management.yml
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/tasks/package-management.yml
+rename to ansible/roles/dhcp-kea/tasks/package-management.yml
+diff --git a/ansible/firewall/roles/dhcp-kea/templates/kea-ctrl-agent.conf b/ansible/roles/dhcp-kea/templates/kea-ctrl-agent.conf
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/templates/kea-ctrl-agent.conf
+rename to ansible/roles/dhcp-kea/templates/kea-ctrl-agent.conf
+diff --git a/ansible/firewall/roles/dhcp-kea/templates/kea-dhcp-ddns.conf b/ansible/roles/dhcp-kea/templates/kea-dhcp-ddns.conf
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/templates/kea-dhcp-ddns.conf
+rename to ansible/roles/dhcp-kea/templates/kea-dhcp-ddns.conf
+diff --git a/ansible/firewall/roles/dhcp-kea/templates/kea-dhcp4.conf b/ansible/roles/dhcp-kea/templates/kea-dhcp4.conf
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/templates/kea-dhcp4.conf
+rename to ansible/roles/dhcp-kea/templates/kea-dhcp4.conf
+diff --git a/ansible/firewall/roles/dhcp-kea/templates/kea-dhcp6.conf b/ansible/roles/dhcp-kea/templates/kea-dhcp6.conf
+similarity index 100%
+rename from ansible/firewall/roles/dhcp-kea/templates/kea-dhcp6.conf
+rename to ansible/roles/dhcp-kea/templates/kea-dhcp6.conf
+diff --git a/ansible/firewall/roles/fail2ban/defaults/main.yml b/ansible/roles/fail2ban/defaults/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/fail2ban/defaults/main.yml
+rename to ansible/roles/fail2ban/defaults/main.yml
+diff --git a/ansible/firewall/roles/fail2ban/handlers/main.yml b/ansible/roles/fail2ban/handlers/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/fail2ban/handlers/main.yml
+rename to ansible/roles/fail2ban/handlers/main.yml
+diff --git a/ansible/firewall/roles/fail2ban/tasks/configuration.yml b/ansible/roles/fail2ban/tasks/configuration.yml
+similarity index 100%
+rename from ansible/firewall/roles/fail2ban/tasks/configuration.yml
+rename to ansible/roles/fail2ban/tasks/configuration.yml
+diff --git a/ansible/firewall/roles/fail2ban/tasks/main.yml b/ansible/roles/fail2ban/tasks/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/fail2ban/tasks/main.yml
+rename to ansible/roles/fail2ban/tasks/main.yml
+diff --git a/ansible/firewall/roles/fail2ban/vars/main.yml b/ansible/roles/fail2ban/vars/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/fail2ban/vars/main.yml
+rename to ansible/roles/fail2ban/vars/main.yml
+diff --git a/ansible/firewall/roles/haproxy/handlers/main.yaml b/ansible/roles/haproxy/handlers/main.yaml
+similarity index 100%
+rename from ansible/firewall/roles/haproxy/handlers/main.yaml
+rename to ansible/roles/haproxy/handlers/main.yaml
+diff --git a/ansible/firewall/roles/haproxy/tasks/main.yaml b/ansible/roles/haproxy/tasks/main.yaml
+similarity index 100%
+rename from ansible/firewall/roles/haproxy/tasks/main.yaml
+rename to ansible/roles/haproxy/tasks/main.yaml
+diff --git a/ansible/firewall/roles/haproxy/templates/haproxy.cfg.j2 b/ansible/roles/haproxy/templates/haproxy.cfg.j2
+similarity index 100%
+rename from ansible/firewall/roles/haproxy/templates/haproxy.cfg.j2
+rename to ansible/roles/haproxy/templates/haproxy.cfg.j2
+diff --git a/ansible/firewall/roles/keepalived/defaults/main.yml b/ansible/roles/keepalived/defaults/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/keepalived/defaults/main.yml
+rename to ansible/roles/keepalived/defaults/main.yml
+diff --git a/ansible/firewall/roles/keepalived/handlers/main.yml b/ansible/roles/keepalived/handlers/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/keepalived/handlers/main.yml
+rename to ansible/roles/keepalived/handlers/main.yml
+diff --git a/ansible/firewall/roles/keepalived/readme.md b/ansible/roles/keepalived/readme.md
+similarity index 100%
+rename from ansible/firewall/roles/keepalived/readme.md
+rename to ansible/roles/keepalived/readme.md
+diff --git a/ansible/firewall/roles/keepalived/tasks/main.yml b/ansible/roles/keepalived/tasks/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/keepalived/tasks/main.yml
+rename to ansible/roles/keepalived/tasks/main.yml
+diff --git a/ansible/firewall/roles/keepalived/templates/keepalived.conf.j2 b/ansible/roles/keepalived/templates/keepalived.conf.j2
+similarity index 100%
+rename from ansible/firewall/roles/keepalived/templates/keepalived.conf.j2
+rename to ansible/roles/keepalived/templates/keepalived.conf.j2
+diff --git a/ansible/roles/minio/defaults/main.yml b/ansible/roles/minio/defaults/main.yml
+new file mode 100644
+index 0000000..bd8f041
+--- /dev/null
++++ b/ansible/roles/minio/defaults/main.yml
+@@ -0,0 +1,41 @@
++---
++
++# Minio binaries path
++minio_server_bin: /usr/local/bin/minio
++minio_client_bin: /usr/local/bin/mc
++
++# Minio release to install. default if lastet
++minio_server_release: ""
++minio_client_release: ""
++
++# Runtime user and group for the Minio server service
++minio_user: minio
++minio_group: minio
++
++# Path to the file containing the ENV variables for the Minio server
++minio_server_envfile: /etc/default/minio
++
++# Minio server listen address
++minio_server_addr: ":9090"
++
++# Minio server data directories
++minio_server_datadirs:
++  - /var/lib/minio
++minio_server_make_datadirs: true
++
++# Minio server cluster node list.
++minio_server_cluster_nodes: [ ]
++
++# Additional environment variables to be set in minio server environment
++minio_server_env_extra: ""
++
++# Additional Minio server CLI options
++minio_server_opts: ""
++
++# Minio access and secret keys
++minio_access_key: ""
++minio_secret_key: ""
++
++# Switches to enable/disable the Minio server and/or Minio client installation.
++minio_install_server: true
++minio_install_client: true
+diff --git a/ansible/roles/minio/handlers/main.yml b/ansible/roles/minio/handlers/main.yml
+new file mode 100644
+index 0000000..1219026
+--- /dev/null
++++ b/ansible/roles/minio/handlers/main.yml
+@@ -0,0 +1,11 @@
++---
++
++- name: reload minio systemd
++  systemd:
++    name: minio
++    daemon_reload: True
++
++- name: restart minio
++  service:
++    name: minio
++    state: restarted
+diff --git a/ansible/roles/minio/tasks/install-client.yml b/ansible/roles/minio/tasks/install-client.yml
+new file mode 100644
+index 0000000..c95f7b4
+--- /dev/null
++++ b/ansible/roles/minio/tasks/install-client.yml
+@@ -0,0 +1,32 @@
++---
++
++- name: Compose the Minio client download base url
++  set_fact:
++    _minio_client_download_base_url: "https://dl.minio.io/client/mc/release/linux-{{ go_arch }}"
++
++- name: Compose the Minio client download url with lastest release
++  set_fact:
++    _minio_client_download_url: "{{ _minio_client_download_base_url }}/mc"
++  when: minio_client_release | length == 0
++
++- name: "Compose the Minio client download url with release {{ minio_client_release }}"
++  set_fact:
++    _minio_client_download_url: "{{ _minio_client_download_base_url }}/archive/mc.{{ minio_client_release }}"
++  when: minio_client_release | length > 0
++
++- name: "Get the Minio client checksum for {{ go_arch }} architecture"
++  set_fact:
++    _minio_client_checksum: "{{ lookup('url', _minio_client_download_url + '.sha256sum').split(' ')[0] }}"
++
++- name: Download the Minio client
++  get_url:
++    url: "{{ _minio_client_download_url }}"
++    dest: "{{ minio_client_bin }}"
++    owner: "root"
++    group: "root"
++    mode: 0755
++    checksum: "sha256:{{ _minio_client_checksum }}"
++  register: _download_client
++  until: _download_client is succeeded
++  retries: 5
++  delay: 2
+diff --git a/ansible/roles/minio/tasks/install-server.yml b/ansible/roles/minio/tasks/install-server.yml
+new file mode 100644
+index 0000000..0a811da
+--- /dev/null
++++ b/ansible/roles/minio/tasks/install-server.yml
+@@ -0,0 +1,79 @@
++---
++- name: Compose the Minio server download base url
++  set_fact:
++    _minio_server_download_base_url: "https://dl.minio.io/server/minio/release/linux-{{ go_arch }}"
++
++- name: Compose the Minio server download url with lastest release
++  set_fact:
++    _minio_server_download_url: "{{ _minio_server_download_base_url }}/minio"
++  when: minio_server_release | length == 0
++
++- name: "Compose the Minio server download url with release {{ minio_server_release }}"
++  set_fact:
++    _minio_server_download_url: "{{ _minio_server_download_base_url }}/archive/minio.{{ minio_server_release }}"
++  when: minio_server_release | length > 0
++
++- name: "Get the Minio server checksum for {{ go_arch }} architecture"
++  set_fact:
++    _minio_server_checksum: "{{ lookup('url', _minio_server_download_url + '.sha256sum').split(' ')[0] }}"
++
++- name: Create Minio group
++  group:
++    name: "{{ minio_group }}"
++    state: present
++
++- name: Create Minio user
++  user:
++    name: "{{ minio_user }}"
++    group: "{{ minio_group }}"
++    system: "yes"
++    shell: "/usr/sbin/nologin"
++
++- name: Create the Minio data storage directories
++  file:
++    path: "{{ item }}"
++    state: directory
++    owner: "{{ minio_user }}"
++    group: "{{ minio_group }}"
++    mode: 0750
++  when: minio_server_make_datadirs
++  with_items: "{{ minio_server_datadirs }}"
++
++- name: Download the Minio server
++  get_url:
++    url: "{{ _minio_server_download_url }}"
++    dest: "{{ minio_server_bin }}"
++    owner: "root"
++    group: "root"
++    mode: 0755
++    checksum: "sha256:{{ _minio_server_checksum }}"
++  register: _download_server
++  until: _download_server is succeeded
++  retries: 5
++  delay: 2
++  notify: restart minio
++
++- name: Generate the Minio server envfile
++  template:
++    src: minio.env.j2
++    dest: "{{ minio_server_envfile }}"
++    owner: "root"
++    group: "{{ minio_group }}"
++    mode: 0640
++  notify: restart minio
++
++- name: Create the Minio server systemd config
++  template:
++    src: minio.service.j2
++    dest: "/etc/systemd/system/minio.service"
++    owner: "root"
++    group: "root"
++  notify:
++    - reload minio systemd
++    - restart minio
++
++- name: Enable and start the Minio service
++  service:
++    name: minio
++    state: started
++    enabled: true
+diff --git a/ansible/roles/minio/tasks/main.yml b/ansible/roles/minio/tasks/main.yml
+new file mode 100644
+index 0000000..9f5468f
+--- /dev/null
++++ b/ansible/roles/minio/tasks/main.yml
+@@ -0,0 +1,10 @@
++---
++
++- include_tasks: install-server.yml
++  when: minio_install_server
++
++- include_tasks: install-client.yml
++  when: minio_install_client
++
++# TODO: Audit logging backfill to k8s postgres
++# TODO: Prometheus Metrics
+diff --git a/ansible/roles/minio/templates/minio.env.j2 b/ansible/roles/minio/templates/minio.env.j2
+new file mode 100644
+index 0000000..d1291fc
+--- /dev/null
++++ b/ansible/roles/minio/templates/minio.env.j2
+@@ -0,0 +1,15 @@
++{{ ansible_managed | comment }}
++
++# Minio local/remote volumes.
++{% if minio_server_cluster_nodes | length > 0 %}
++MINIO_VOLUMES="{{ minio_server_cluster_nodes | join(' ') }}"
++{% else %}
++MINIO_VOLUMES="{{ minio_server_datadirs | join(' ') }}"
++{% endif %}
++# Minio cli options.
++MINIO_OPTS="--address {{ minio_server_addr }} {{ minio_server_opts }}"
++
++MINIO_ROOT_USER="{{ minio_root_user }}"
++MINIO_ROOT_PASSWORD="{{ minio_root_password }}"
++
++{{ minio_server_env_extra }}
+diff --git a/ansible/roles/minio/templates/minio.service.j2 b/ansible/roles/minio/templates/minio.service.j2
+new file mode 100644
+index 0000000..21d3b6d
+--- /dev/null
++++ b/ansible/roles/minio/templates/minio.service.j2
+@@ -0,0 +1,50 @@
++{{ ansible_managed | comment }}
++
++[Unit]
++Description=Minio
++Documentation=https://min.io/docs/minio/linux/index.html
++Wants=network-online.target
++After=network-online.target
++AssertFileIsExecutable={{ minio_server_bin }}
++
++# Avoid noisy crashloops
++StartLimitIntervalSec=60
++StartLimitBurst=5
++
++[Service]
++WorkingDirectory=/usr/local/
++
++User={{ minio_user }}
++Group={{ minio_group }}
++ProtectProc=invisible
++
++EnvironmentFile={{ minio_server_envfile }}
++ExecStartPre=/bin/bash -c "if [ -z \"${MINIO_VOLUMES}\" ]; then echo \"Variable MINIO_VOLUMES not set in {{ minio_server_envfile }}\"; exit 1; fi"
++
++ExecStart={{ minio_server_bin }} server $MINIO_OPTS $MINIO_VOLUMES
++
++# Let systemd always restart this service, in limits defined by StartLimitIntervalSec and StartLimitBurst.
++Restart=always
++
++StandardOutput=journal
++StandardError=inherit
++
++# Specifies the maximum file descriptor number that can be opened by this process
++LimitNOFILE=65536
++
++# Disable timeout logic and wait until process is stopped
++TimeoutStopSec=0
++
++# SIGTERM signal is used to stop Minio
++KillSignal=SIGTERM
++SendSIGKILL=no
++
++# Specifies the maximum number of threads this process can create
++TasksMax=infinity
++
++{% if (minio_server_addr.split(':')[-1] | int) < 1024 %}
++AmbientCapabilities=CAP_NET_BIND_SERVICE
++{% endif %}
++
++[Install]
++WantedBy=multi-user.target
+diff --git a/ansible/roles/minio/vars/main.yml b/ansible/roles/minio/vars/main.yml
+new file mode 100644
+index 0000000..f1b3a4a
+--- /dev/null
++++ b/ansible/roles/minio/vars/main.yml
+@@ -0,0 +1,9 @@
++---
++go_arch_map:
++  i386: '386'
++  x86_64: 'amd64'
++  aarch64: 'arm64'
++  armv7l: 'arm'
++  armv6l: 'arm6vl'
++
++go_arch: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+diff --git a/ansible/firewall/roles/nftables-firewall/handlers/main.yml b/ansible/roles/nftables-firewall/handlers/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/handlers/main.yml
+rename to ansible/roles/nftables-firewall/handlers/main.yml
+diff --git a/ansible/firewall/roles/nftables-firewall/tasks/main.yml b/ansible/roles/nftables-firewall/tasks/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/tasks/main.yml
+rename to ansible/roles/nftables-firewall/tasks/main.yml
+diff --git a/ansible/firewall/roles/nftables-firewall/tasks/nftables.yml b/ansible/roles/nftables-firewall/tasks/nftables.yml
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/tasks/nftables.yml
+rename to ansible/roles/nftables-firewall/tasks/nftables.yml
+diff --git a/ansible/firewall/roles/nftables-firewall/tasks/suricata.yml b/ansible/roles/nftables-firewall/tasks/suricata.yml
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/tasks/suricata.yml
+rename to ansible/roles/nftables-firewall/tasks/suricata.yml
+diff --git a/ansible/firewall/roles/nftables-firewall/templates/nftables/main.nft b/ansible/roles/nftables-firewall/templates/nftables/main.nft
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/templates/nftables/main.nft
+rename to ansible/roles/nftables-firewall/templates/nftables/main.nft
+diff --git a/ansible/firewall/roles/nftables-firewall/templates/sysconfig/nftables.conf b/ansible/roles/nftables-firewall/templates/sysconfig/nftables.conf
+similarity index 100%
+rename from ansible/firewall/roles/nftables-firewall/templates/sysconfig/nftables.conf
+rename to ansible/roles/nftables-firewall/templates/sysconfig/nftables.conf
+diff --git a/ansible/firewall/roles/routing/defaults/main.yml b/ansible/roles/routing/defaults/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/defaults/main.yml
+rename to ansible/roles/routing/defaults/main.yml
+diff --git a/ansible/firewall/roles/routing/handlers/main.yml b/ansible/roles/routing/handlers/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/handlers/main.yml
+rename to ansible/roles/routing/handlers/main.yml
+diff --git a/ansible/firewall/roles/routing/tasks/config.yml b/ansible/roles/routing/tasks/config.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/tasks/config.yml
+rename to ansible/roles/routing/tasks/config.yml
+diff --git a/ansible/firewall/roles/routing/tasks/main.yml b/ansible/roles/routing/tasks/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/tasks/main.yml
+rename to ansible/roles/routing/tasks/main.yml
+diff --git a/ansible/firewall/roles/routing/tasks/redhat.yml b/ansible/roles/routing/tasks/redhat.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/tasks/redhat.yml
+rename to ansible/roles/routing/tasks/redhat.yml
+diff --git a/ansible/firewall/roles/routing/tasks/system_tuning.yml b/ansible/roles/routing/tasks/system_tuning.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/tasks/system_tuning.yml
+rename to ansible/roles/routing/tasks/system_tuning.yml
+diff --git a/ansible/firewall/roles/routing/templates/.gitkeep b/ansible/roles/routing/templates/.gitkeep
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/.gitkeep
+rename to ansible/roles/routing/templates/.gitkeep
+diff --git a/ansible/firewall/roles/routing/templates/etc/frr/daemons.j2 b/ansible/roles/routing/templates/etc/frr/daemons.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/etc/frr/daemons.j2
+rename to ansible/roles/routing/templates/etc/frr/daemons.j2
+diff --git a/ansible/firewall/roles/routing/templates/etc/frr/debian.conf.j2 b/ansible/roles/routing/templates/etc/frr/debian.conf.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/etc/frr/debian.conf.j2
+rename to ansible/roles/routing/templates/etc/frr/debian.conf.j2
+diff --git a/ansible/firewall/roles/routing/templates/etc/frr/frr.conf.j2 b/ansible/roles/routing/templates/etc/frr/frr.conf.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/etc/frr/frr.conf.j2
+rename to ansible/roles/routing/templates/etc/frr/frr.conf.j2
+diff --git a/ansible/firewall/roles/routing/templates/etc/frr/vtysh.conf.j2 b/ansible/roles/routing/templates/etc/frr/vtysh.conf.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/etc/frr/vtysh.conf.j2
+rename to ansible/roles/routing/templates/etc/frr/vtysh.conf.j2
+diff --git a/ansible/firewall/roles/routing/templates/opt/frr/monitoring/bgp_neighbor_data.py.j2 b/ansible/roles/routing/templates/opt/frr/monitoring/bgp_neighbor_data.py.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/opt/frr/monitoring/bgp_neighbor_data.py.j2
+rename to ansible/roles/routing/templates/opt/frr/monitoring/bgp_neighbor_data.py.j2
+diff --git a/ansible/firewall/roles/routing/templates/opt/frr/monitoring/output_module.py.j2 b/ansible/roles/routing/templates/opt/frr/monitoring/output_module.py.j2
+similarity index 100%
+rename from ansible/firewall/roles/routing/templates/opt/frr/monitoring/output_module.py.j2
+rename to ansible/roles/routing/templates/opt/frr/monitoring/output_module.py.j2
+diff --git a/ansible/firewall/roles/routing/vars/main.yml b/ansible/roles/routing/vars/main.yml
+similarity index 100%
+rename from ansible/firewall/roles/routing/vars/main.yml
+rename to ansible/roles/routing/vars/main.yml
+diff --git a/ansible/.ansible_roles/userspace/tasks/main.yml b/ansible/roles/userspace/tasks/main.yml
+similarity index 100%
+rename from ansible/.ansible_roles/userspace/tasks/main.yml
+rename to ansible/roles/userspace/tasks/main.yml
+diff --git a/ansible/.ansible_roles/userspace/tasks/package-management.yml b/ansible/roles/userspace/tasks/package-management.yml
+similarity index 70%
+rename from ansible/.ansible_roles/userspace/tasks/package-management.yml
+rename to ansible/roles/userspace/tasks/package-management.yml
+index b78c08a..780fca4 100644
+--- a/ansible/.ansible_roles/userspace/tasks/package-management.yml
++++ b/ansible/roles/userspace/tasks/package-management.yml
+@@ -5,8 +5,8 @@
+     update_cache: true
+ 
+ - name: Install additional requested packages
+-  when: general_system_packages is defined
++  when: general_system_packages != []
+   ansible.builtin.dnf:
+-    name: "{{ general_system_packages | default([]) }}"
++    name: "{{ general_system_packages }}"
+     state: present
+     update_cache: true
+diff --git a/ansible/.ansible_roles/userspace/tasks/users.yml b/ansible/roles/userspace/tasks/users.yml
+similarity index 86%
+rename from ansible/.ansible_roles/userspace/tasks/users.yml
+rename to ansible/roles/userspace/tasks/users.yml
+index bf55715..ec94236 100644
+--- a/ansible/.ansible_roles/userspace/tasks/users.yml
++++ b/ansible/roles/userspace/tasks/users.yml
+@@ -1,13 +1,3 @@
+-- name: Allow user to sudo without password
+-  loop: "{{ general_users }}"
+-  when: item.nopasswd
+-  ansible.builtin.copy:
+-    content: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
+-    dest: "/etc/sudoers.d/{{ item.name }}"
+-    mode: u=rw,g=r,o=r
+-    owner: root
+-    group: root
+-
+ - name: Create user account
+   loop: "{{ general_users }}"
+   ansible.builtin.user:
+@@ -18,12 +8,26 @@
+     shell: "{{ item.shell | default(omit) }}"
+     groups: "{{ item.groups | default('users') }}"
+ 
+-- name: Add authorised ssh keys
++- name: Allow user to sudo without password
+   loop: "{{ general_users }}"
+-  when: item.public_ssh_keys is defined
++  when: item.nopasswd
++  ansible.builtin.copy:
++    content: "{{ item.name }} ALL=(ALL) NOPASSWD: ALL"
++    dest: "/etc/sudoers.d/{{ item.name }}"
++    mode: u=rw,g=r,o=r
++    owner: root
++    group: root
++
++- name: Add authorised ssh keys
++  loop:
++    "{{ q('subelements',
++          general_users,
++          'public_ssh_keys',
++          {'skip_missing': True})
++      }}"
+   ansible.posix.authorized_key:
+-    user: "{{ item.name }}"
+-    key: "{{ item.public_ssh_keys }}"
++    user: "{{ item.0.name }}"
++    key: "{{ item.1 }}"
+ 
+ - name: Clone user configuration repository
+   loop: "{{ general_users }}"
+diff --git a/ansible/kubernetes/playbooks/templates/audit-policy.yaml.j2 b/ansible/templates/kubernetes/audit-policy.yaml.j2
+similarity index 100%
+rename from ansible/kubernetes/playbooks/templates/audit-policy.yaml.j2
+rename to ansible/templates/kubernetes/audit-policy.yaml.j2
+diff --git a/ansible/kubernetes/playbooks/templates/calico-bgpconfiguration.yaml.j2 b/ansible/templates/kubernetes/calico-bgpconfiguration.yaml.j2
+similarity index 100%
+rename from ansible/kubernetes/playbooks/templates/calico-bgpconfiguration.yaml.j2
+rename to ansible/templates/kubernetes/calico-bgpconfiguration.yaml.j2
+diff --git a/ansible/kubernetes/playbooks/templates/calico-bgppeer.yaml.j2 b/ansible/templates/kubernetes/calico-bgppeer.yaml.j2
+similarity index 100%
+rename from ansible/kubernetes/playbooks/templates/calico-bgppeer.yaml.j2
+rename to ansible/templates/kubernetes/calico-bgppeer.yaml.j2
+diff --git a/ansible/kubernetes/playbooks/templates/calico-ebpf.yaml.j2 b/ansible/templates/kubernetes/calico-ebpf.yaml.j2
+similarity index 100%
+rename from ansible/kubernetes/playbooks/templates/calico-ebpf.yaml.j2
+rename to ansible/templates/kubernetes/calico-ebpf.yaml.j2
+diff --git a/ansible/kubernetes/playbooks/templates/calico-installation.yaml.j2 b/ansible/templates/kubernetes/calico-installation.yaml.j2
+similarity index 91%
+rename from ansible/kubernetes/playbooks/templates/calico-installation.yaml.j2
+rename to ansible/templates/kubernetes/calico-installation.yaml.j2
+index d04e1b7..bd9f197 100644
+--- a/ansible/kubernetes/playbooks/templates/calico-installation.yaml.j2
++++ b/ansible/templates/kubernetes/calico-installation.yaml.j2
+@@ -8,6 +8,8 @@ spec:
+   imagePath: calico
+   calicoNetwork:
+     bgp: Enabled
++    hostPorts: Disabled
++    linuxDataplane: BPF
+     # Note: The ipPools section cannot be modified post-install.
+     ipPools:
+       - blockSize: 26
+diff --git a/ansible/kubernetes/playbooks/templates/keepalived.conf.j2 b/ansible/templates/kubernetes/keepalived.conf.j2
+similarity index 100%
+rename from ansible/kubernetes/playbooks/templates/keepalived.conf.j2
+rename to ansible/templates/kubernetes/keepalived.conf.j2
+diff --git a/ansible/firewall/playbooks/templates/nftables/main.nft b/ansible/templates/nftables/main.nft
+similarity index 91%
+rename from ansible/firewall/playbooks/templates/nftables/main.nft
+rename to ansible/templates/nftables/main.nft
+index 9f3978a..8d3607c 100644
+--- a/ansible/firewall/playbooks/templates/nftables/main.nft
++++ b/ansible/templates/nftables/main.nft
+@@ -35,9 +35,9 @@ table inet primary {
+         udp dport 51820 accept
+ 
+         # -{Dispatch packets to zones by interface}
+-        meta iifname $nic_wan jump input_wan_zone
+-        meta iifname $nic_man jump input_man_zone
+         meta iifname {$nic_man, $nic_lan} jump input_trusted_zone
++        meta iifname $nic_man jump input_man_zone
++        meta iifname $nic_wan jump input_wan_zone
+ 
+         # -{Rate-Limited ICMP on WAN interface}
+         meta iifname $nic_wan meta l4proto { icmp, ipv6-icmp } limit rate over 2/second drop
+@@ -52,17 +52,10 @@ table inet primary {
+         # -{Allow connections to services running on the local system}
+         tcp dport 22 jump log-accept comment "Secure Shell"
+         udp dport {67,68} accept comment "DHCP"
+-        # -{Accept DNS, multicast DNS, and LLMNR}
+-        meta l4proto { udp, tcp } th dport 53 accept comment "Accept DNS"
++        # -{Accept multicast DNS and LLMNR}
+         udp dport mdns ip6 daddr ff02::fb accept comment "Accept mDNS"
+         udp dport mdns ip daddr 224.0.0.251 accept comment "Accept mDNS"
+         meta l4proto { udp, tcp } th dport llmnr accept comment "Accept llmnr"
+-        # -{Accept FTP}
+-        tcp dport 20-21 jump log-accept
+-        udp dport 69 jump log-accept
+-        tcp dport 60000-60029 jump log-accept
+-        # -{Allow Kubernetes API}
+-        tcp dport 6443 accept
+         return
+     }
+ 
+@@ -78,8 +71,7 @@ table inet primary {
+         } accept
+         # -{Accept and rate-limit ssh connections}
+         #tcp dport 22 ct state new limit rate 5/minute jump log-accept
+-        # -{Final Verdict of incoming connections}
+-        jump log-reject
++        return
+     }
+ 
+     chain input_man_zone {
+diff --git a/kubernetes/apps/default/actual/app/helmrelease.yaml b/kubernetes/apps/default/actual/app/helmrelease.yaml
+index faff0b2..1c7ad1d 100644
+--- a/kubernetes/apps/default/actual/app/helmrelease.yaml
++++ b/kubernetes/apps/default/actual/app/helmrelease.yaml
+@@ -9,7 +9,7 @@ spec:
+   chart:
+     spec:
+       chart: app-template
+-      version: 1.5.1
++      version: 1.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: bjw-s
+@@ -24,7 +24,7 @@ spec:
+   values:
+     image:
+       repository: jlongster/actual-server
+-      tag: 23.6.0-alpine
++      tag: 23.5.0-alpine
+       pullPolicy: IfNotPresent
+ 
+     service:
+diff --git a/kubernetes/apps/default/glauth/app/helmrelease.yaml b/kubernetes/apps/default/glauth/app/helmrelease.yaml
+index 014b1f4..0ada790 100644
+--- a/kubernetes/apps/default/glauth/app/helmrelease.yaml
++++ b/kubernetes/apps/default/glauth/app/helmrelease.yaml
+@@ -10,7 +10,7 @@ spec:
+   chart:
+     spec:
+       chart: app-template
+-      version: 1.5.1
++      version: 1.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: bjw-s
+diff --git a/kubernetes/apps/default/hajimari/app/helmrelease.yaml b/kubernetes/apps/default/hajimari/app/helmrelease.yaml
+index 00af98d..81aedc9 100644
+--- a/kubernetes/apps/default/hajimari/app/helmrelease.yaml
++++ b/kubernetes/apps/default/hajimari/app/helmrelease.yaml
+@@ -43,10 +43,9 @@ spec:
+       namespaceSelector:
+         matchNames:
+           - default
+-          - downloads
+-          - longhorn-system
+           - networking
+           - rook-ceph
++          - longhorn-system
+     ingress:
+       main:
+         enabled: true
+diff --git a/kubernetes/apps/default/kustomization.yaml b/kubernetes/apps/default/kustomization.yaml
+index ad0b4f0..9c0c96d 100644
+--- a/kubernetes/apps/default/kustomization.yaml
++++ b/kubernetes/apps/default/kustomization.yaml
+@@ -6,14 +6,14 @@ resources:
+   # Pre Flux-Kustomizations
+   - ./namespace.yaml
+   # Flux-Kustomizations
+-  #- ./postgres/ks.yaml
++  - ./postgres/ks.yaml
+   # - ./actual/ks.yaml
+   # - ./cloudnative-pg/ks.yaml
+   # - ./glauth/ks.yaml
+-  - ./hajimari/ks.yaml
++  # - ./hajimari/ks.yaml
+   # - ./homepage/ks.yaml
+   # - ./netbox/ks.yaml
+   # - ./redis/ks.yaml
+-  - ./syncthing/ks.yaml
+-  - ./vaultwarden/ks.yaml
++  # - ./syncthing/ks.yaml
++  # - ./vaultwarden/ks.yaml
+   # - ./wikijs/ks.yaml
+diff --git a/kubernetes/apps/default/syncthing/app/helmrelease.yaml b/kubernetes/apps/default/syncthing/app/helmrelease.yaml
+index fd596f0..f03d6e2 100644
+--- a/kubernetes/apps/default/syncthing/app/helmrelease.yaml
++++ b/kubernetes/apps/default/syncthing/app/helmrelease.yaml
+@@ -1,5 +1,3 @@
+----
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrelease_v2beta1.json
+ apiVersion: helm.toolkit.fluxcd.io/v2beta1
+ kind: HelmRelease
+ metadata:
+@@ -10,7 +8,7 @@ spec:
+   chart:
+     spec:
+       chart: app-template
+-      version: 1.5.1
++      version: 1.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: bjw-s
+@@ -87,9 +85,9 @@ spec:
+         mountPath: /var/syncthing
+     resources:
+       requests:
++        memory: 75Mi
+         cpu: 100m
+-        memory: 100Mi
+       limits:
+         memory: 300Mi
+-        cpu: 200m
++        cpu: 500m
+ 
+diff --git a/kubernetes/apps/default/syncthing/app/kustomization.yaml b/kubernetes/apps/default/syncthing/app/kustomization.yaml
+index ac25ec9..cd5904d 100644
+--- a/kubernetes/apps/default/syncthing/app/kustomization.yaml
++++ b/kubernetes/apps/default/syncthing/app/kustomization.yaml
+@@ -1,9 +1,8 @@
+ ---
+-# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ resources:
+   - helmrelease.yaml
+   - pvc.yaml
+   - secret.sops.yaml
+-  #- volsync.yaml
++  - volsync.yaml
+diff --git a/kubernetes/apps/default/syncthing/app/pvc.yaml b/kubernetes/apps/default/syncthing/app/pvc.yaml
+index 2d1412c..7cc6e83 100644
+--- a/kubernetes/apps/default/syncthing/app/pvc.yaml
++++ b/kubernetes/apps/default/syncthing/app/pvc.yaml
+@@ -7,7 +7,7 @@ metadata:
+ spec:
+   storageClassName: longhorn
+   accessModes:
+-    - ReadWriteOnce
++    - ReadWriteMany
+   resources:
+     requests:
+       storage: 40Gi
+diff --git a/kubernetes/apps/default/syncthing/ks.yaml b/kubernetes/apps/default/syncthing/ks.yaml
+index 0cbb568..0f9baa4 100644
+--- a/kubernetes/apps/default/syncthing/ks.yaml
++++ b/kubernetes/apps/default/syncthing/ks.yaml
+@@ -7,7 +7,6 @@ metadata:
+ spec:
+   dependsOn:
+     - name: cluster-apps-longhorn
+-    # - name: cluster-apps-rook-ceph-cluster
+   path: ./kubernetes/apps/default/syncthing/app
+   prune: true
+   sourceRef:
+diff --git a/kubernetes/apps/default/vaultwarden/app/helmrelease.yaml b/kubernetes/apps/default/vaultwarden/app/helmrelease.yaml
+index 66c773b..ae11404 100644
+--- a/kubernetes/apps/default/vaultwarden/app/helmrelease.yaml
++++ b/kubernetes/apps/default/vaultwarden/app/helmrelease.yaml
+@@ -1,5 +1,3 @@
+----
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrelease_v2beta1.json
+ apiVersion: helm.toolkit.fluxcd.io/v2beta1
+ kind: HelmRelease
+ metadata:
+@@ -10,7 +8,7 @@ spec:
+   chart:
+     spec:
+       chart: app-template
+-      version: 1.5.1
++      version: 1.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: bjw-s
+@@ -28,8 +26,8 @@ spec:
+     keepHistory: false
+   values:
+     image:
+-      repository: ghcr.io/dani-garcia/vaultwarden
+-      tag: latest@sha256:d52375b3af01a2aaeb36fc7d1452d0e9414ce84aad6d257566ce453967e88c8d
++      repository: docker.io/vaultwarden/server
++      tag: 1.28.1-alpine
+     env:
+       TZ: America/Detroit
+       SIGNUPS_ALLOWED: "false"
+diff --git a/kubernetes/apps/default/vaultwarden/app/kustomization.yaml b/kubernetes/apps/default/vaultwarden/app/kustomization.yaml
+index 2095644..6d7c8a6 100644
+--- a/kubernetes/apps/default/vaultwarden/app/kustomization.yaml
++++ b/kubernetes/apps/default/vaultwarden/app/kustomization.yaml
+@@ -1,5 +1,4 @@
+ ---
+-# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ resources:
+diff --git a/kubernetes/apps/default/vaultwarden/app/pvc.yaml b/kubernetes/apps/default/vaultwarden/app/pvc.yaml
+index 0d97b38..829c2d3 100644
+--- a/kubernetes/apps/default/vaultwarden/app/pvc.yaml
++++ b/kubernetes/apps/default/vaultwarden/app/pvc.yaml
+@@ -7,7 +7,7 @@ metadata:
+ spec:
+   storageClassName: longhorn
+   accessModes:
+-    - ReadWriteOnce
++    - ReadWriteMany
+   resources:
+     requests:
+       storage: 500Mi
+diff --git a/kubernetes/apps/default/vaultwarden/ks.yaml b/kubernetes/apps/default/vaultwarden/ks.yaml
+index f7f0cd7..262918c 100644
+--- a/kubernetes/apps/default/vaultwarden/ks.yaml
++++ b/kubernetes/apps/default/vaultwarden/ks.yaml
+@@ -6,8 +6,7 @@ metadata:
+   namespace: flux-system
+ spec:
+   dependsOn:
+-    - name: cluster-apps-rook-ceph-cluster
+-    #- name: cluster-apps-longhorn
++    - name: cluster-apps-longhorn
+   path: ./kubernetes/apps/default/vaultwarden/app
+   prune: true
+   sourceRef:
+diff --git a/kubernetes/apps/default/wikijs/app/helmrelease.yaml b/kubernetes/apps/default/wikijs/app/helmrelease.yaml
+index cad6545..c479e6e 100644
+--- a/kubernetes/apps/default/wikijs/app/helmrelease.yaml
++++ b/kubernetes/apps/default/wikijs/app/helmrelease.yaml
+@@ -10,7 +10,7 @@ spec:
+   chart:
+     spec:
+       chart: app-template
+-      version: 1.5.1
++      version: 1.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: bjw-s
+diff --git a/kubernetes/apps/monitoring/grafana/app/helmrelease.yaml b/kubernetes/apps/monitoring/grafana/app/helmrelease.yaml
+index 6d5ae6a..4edbce1 100644
+--- a/kubernetes/apps/monitoring/grafana/app/helmrelease.yaml
++++ b/kubernetes/apps/monitoring/grafana/app/helmrelease.yaml
+@@ -10,7 +10,7 @@ spec:
+   chart:
+     spec:
+       chart: grafana
+-      version: 6.57.0
++      version: 6.56.6
+       sourceRef:
+         kind: HelmRepository
+         name: grafana
+diff --git a/kubernetes/apps/monitoring/kube-prometheus-stack/app/helmrelease.yaml b/kubernetes/apps/monitoring/kube-prometheus-stack/app/helmrelease.yaml
+index a80d69a..c2f0f23 100644
+--- a/kubernetes/apps/monitoring/kube-prometheus-stack/app/helmrelease.yaml
++++ b/kubernetes/apps/monitoring/kube-prometheus-stack/app/helmrelease.yaml
+@@ -10,7 +10,7 @@ spec:
+   chart:
+     spec:
+       chart: kube-prometheus-stack
+-      version: 46.6.0
++      version: 46.5.0
+       sourceRef:
+         kind: HelmRepository
+         name: prometheus-community
+diff --git a/kubernetes/apps/networking/external-dns/app/bind/helmrelease.yaml b/kubernetes/apps/networking/external-dns/app/bind/helmrelease.yaml
+new file mode 100644
+index 0000000..c7c0328
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/bind/helmrelease.yaml
+@@ -0,0 +1,61 @@
++---
++# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
++apiVersion: helm.toolkit.fluxcd.io/v2beta1
++kind: HelmRelease
++metadata:
++  name: &app external-dns-bind
++  namespace: networking
++spec:
++  interval: 30m
++  chart:
++    spec:
++      chart: external-dns
++      version: 1.12.2
++      sourceRef:
++        kind: HelmRepository
++        name: external-dns
++        namespace: flux-system
++  maxHistory: 2
++  install:
++    createNamespace: true
++    remediation:
++      retries: 3
++  upgrade:
++    cleanupOnFail: true
++    remediation:
++      retries: 3
++  uninstall:
++    keepHistory: false
++  values:
++    fullnameOverride: *app
++    provider: rfc2136
++    env:
++      - name: EXTERNAL_DNS_RFC2136_HOST
++        value: "172.22.0.1"
++      - name: EXTERNAL_DNS_RFC2136_PORT
++        value: "2053"
++      - name: EXTERNAL_DNS_RFC2136_ZONE
++        value: zynthovian.xyz
++      - name: EXTERNAL_DNS_RFC2136_TSIG_AXFR
++        value: "true"
++      - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
++        value: external-dns-key
++      - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG
++        valueFrom:
++          secretKeyRef:
++            name: external-dns-bind-secret
++            key: tsig-algorithm
++      - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
++        valueFrom:
++          secretKeyRef:
++            name: external-dns-bind-secret
++            key: tsig-secret
++    policy: sync
++    sources: ["ingress", "service"]
++    txtOwnerId: default
++    txtPrefix: k8s.
++    domainFilters: ["zynthovian.xyz"]
++    serviceMonitor:
++      enabled: true
++    podAnnotations:
++      secret.reloader.stakater.com/reload: external-dns-bind-secret
+diff --git a/kubernetes/apps/networking/pod-gateway/downloads/kustomization.yaml b/kubernetes/apps/networking/external-dns/app/bind/kustomization.yaml
+similarity index 100%
+rename from kubernetes/apps/networking/pod-gateway/downloads/kustomization.yaml
+rename to kubernetes/apps/networking/external-dns/app/bind/kustomization.yaml
+index 8b3cc1a..16a6ce3 100644
+--- a/kubernetes/apps/networking/pod-gateway/downloads/kustomization.yaml
++++ b/kubernetes/apps/networking/external-dns/app/bind/kustomization.yaml
+@@ -3,5 +3,5 @@
+ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ resources:
+-  - ./helmrelease.yaml
+   - ./secret.sops.yaml
++  - ./helmrelease.yaml
+diff --git a/kubernetes/apps/networking/external-dns/app/bind/secret.sops.yaml b/kubernetes/apps/networking/external-dns/app/bind/secret.sops.yaml
+new file mode 100644
+index 0000000..a6e89af
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/bind/secret.sops.yaml
+@@ -0,0 +1,9 @@
++apiVersion: v1
++kind: Secret
++metadata:
++    name: external-dns-bind-secret
++    namespace: monitoring
++type: Opaque
++stringData:
++    tsig-algorithm: "hmac-sha256"
++    tsig-secret: "viUIAbbPMo3TO1W/hKtlL4NaQ357uoO2CZnjXM2MNpE="
+diff --git a/kubernetes/apps/networking/external-dns/app/cloudflare/helmrelease.yaml b/kubernetes/apps/networking/external-dns/app/cloudflare/helmrelease.yaml
+new file mode 100644
+index 0000000..1e33812
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/cloudflare/helmrelease.yaml
+@@ -0,0 +1,56 @@
++---
++# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
++apiVersion: helm.toolkit.fluxcd.io/v2beta1
++kind: HelmRelease
++metadata:
++  name: &app external-dns-cloudflare
++  namespace: networking
++spec:
++  interval: 30m
++  chart:
++    spec:
++      chart: external-dns
++      version: 1.12.2
++      sourceRef:
++        kind: HelmRepository
++        name: external-dns
++        namespace: flux-system
++  maxHistory: 2
++  install:
++    createNamespace: true
++    remediation:
++      retries: 3
++  upgrade:
++    cleanupOnFail: true
++    remediation:
++      retries: 3
++  uninstall:
++    keepHistory: false
++  values:
++    fullnameOverride: *app
++    provider: cloudflare
++    env:
++      - name: CF_API_EMAIL
++        valueFrom:
++          secretKeyRef:
++            name: external-dns-cloudflare-secret
++            key: email
++      - name: CF_API_KEY
++        valueFrom:
++          secretKeyRef:
++            name: external-dns-cloudflare-secret
++            key: api-key
++    extraArgs:
++      - --annotation-filter=external-dns.home.arpa/public in (true)
++      - --cloudflare-proxied
++      - --crd-source-apiversion=externaldns.k8s.io/v1alpha1
++      - --crd-source-kind=DNSEndpoint
++    policy: sync
++    sources: ["crd", "ingress"]
++    txtOwnerId: default
++    txtPrefix: k8s.
++    domainFilters: ["zynthovian.xyz"]
++    serviceMonitor:
++      enabled: true
++    podAnnotations:
++      secret.reloader.stakater.com/reload: external-dns-cloudflare-secret
+diff --git a/kubernetes/apps/networking/external-dns/app/cloudflare/secret.sops.yaml b/kubernetes/apps/networking/external-dns/app/cloudflare/secret.sops.yaml
+new file mode 100644
+index 0000000..d6427e5
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/cloudflare/secret.sops.yaml
+@@ -0,0 +1,9 @@
++apiVersion: v1
++kind: Secret
++metadata:
++    name: external-dns-cloudflare-secret
++    namespace: monitoring
++type: Opaque
++stringData:
++    email: ""
++    api-key: ""
+diff --git a/kubernetes/apps/networking/external-dns/app/dnsendpoint-crd.yaml b/kubernetes/apps/networking/external-dns/app/dnsendpoint-crd.yaml
+new file mode 100644
+index 0000000..9254f89
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/dnsendpoint-crd.yaml
+@@ -0,0 +1,93 @@
++---
++apiVersion: apiextensions.k8s.io/v1
++kind: CustomResourceDefinition
++metadata:
++  annotations:
++    controller-gen.kubebuilder.io/version: v0.5.0
++    api-approved.kubernetes.io: "https://github.com/kubernetes-sigs/external-dns/pull/2007"
++  creationTimestamp: null
++  name: dnsendpoints.externaldns.k8s.io
++spec:
++  group: externaldns.k8s.io
++  names:
++    kind: DNSEndpoint
++    listKind: DNSEndpointList
++    plural: dnsendpoints
++    singular: dnsendpoint
++  scope: Namespaced
++  versions:
++  - name: v1alpha1
++    schema:
++      openAPIV3Schema:
++        properties:
++          apiVersion:
++            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
++            type: string
++          kind:
++            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
++            type: string
++          metadata:
++            type: object
++          spec:
++            description: DNSEndpointSpec defines the desired state of DNSEndpoint
++            properties:
++              endpoints:
++                items:
++                  description: Endpoint is a high-level way of a connection between a service and an IP
++                  properties:
++                    dnsName:
++                      description: The hostname of the DNS record
++                      type: string
++                    labels:
++                      additionalProperties:
++                        type: string
++                      description: Labels stores labels defined for the Endpoint
++                      type: object
++                    providerSpecific:
++                      description: ProviderSpecific stores provider specific config
++                      items:
++                        description: ProviderSpecificProperty holds the name and value of a configuration which is specific to individual DNS providers
++                        properties:
++                          name:
++                            type: string
++                          value:
++                            type: string
++                        type: object
++                      type: array
++                    recordTTL:
++                      description: TTL for the record
++                      format: int64
++                      type: integer
++                    recordType:
++                      description: RecordType type of record, e.g. CNAME, A, SRV, TXT etc
++                      type: string
++                    setIdentifier:
++                      description: Identifier to distinguish multiple records with the same name and type (e.g. Route53 records with routing policies other than 'simple')
++                      type: string
++                    targets:
++                      description: The targets the DNS record points to
++                      items:
++                        type: string
++                      type: array
++                  type: object
++                type: array
++            type: object
++          status:
++            description: DNSEndpointStatus defines the observed state of DNSEndpoint
++            properties:
++              observedGeneration:
++                description: The generation observed by the external-dns controller.
++                format: int64
++                type: integer
++            type: object
++        type: object
++    served: true
++    storage: true
++    subresources:
++      status: {}
++status:
++  acceptedNames:
++    kind: ""
++    plural: ""
++  conditions: []
++  storedVersions: []
+diff --git a/kubernetes/apps/networking/external-dns/app/kustomization.yaml b/kubernetes/apps/networking/external-dns/app/kustomization.yaml
+new file mode 100644
+index 0000000..b0591ac
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/app/kustomization.yaml
+@@ -0,0 +1,9 @@
++---
++# yaml-language-server: $schema=https://json.schemastore.org/kustomization
++apiVersion: kustomize.config.k8s.io/v1beta1
++kind: Kustomization
++namespace: networking
++resources:
++  # - ./dnsendpoint-crd.yaml
++  # - ./cloudflare
++  - ./bind
+diff --git a/kubernetes/apps/networking/external-dns/ks.yaml b/kubernetes/apps/networking/external-dns/ks.yaml
+new file mode 100644
+index 0000000..08903f2
+--- /dev/null
++++ b/kubernetes/apps/networking/external-dns/ks.yaml
+@@ -0,0 +1,17 @@
++---
++# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kustomize.toolkit.fluxcd.io/kustomization_v1.json
++apiVersion: kustomize.toolkit.fluxcd.io/v1
++kind: Kustomization
++metadata:
++  name: cluster-apps-external-dns
++  namespace: flux-system
++spec:
++  path: ./kubernetes/apps/networking/external-dns/app
++  prune: true
++  sourceRef:
++    kind: GitRepository
++    name: homelab-as-code
++  wait: true
++  interval: 30m
++  retryInterval: 1m
++  timeout: 5m
+diff --git a/kubernetes/apps/networking/ingress-nginx/app/clusterpolicy.yaml b/kubernetes/apps/networking/ingress-nginx/app/clusterpolicy.yaml
+index 9a93ed1..b4513ed 100644
+--- a/kubernetes/apps/networking/ingress-nginx/app/clusterpolicy.yaml
++++ b/kubernetes/apps/networking/ingress-nginx/app/clusterpolicy.yaml
+@@ -80,9 +80,9 @@ metadata:
+     policies.kyverno.io/subject: Ingress
+     policies.kyverno.io/description: >-
+       This policy creates annotations on ingresses. When
+-      the `external-dns.home.arpa/enabled` annotation is not
+-      set it applies the nginx annotations for use with only
+-      internal application access.
++      the `external-dns.home.arpa/public` annotation is not
++      set it applies nginx "whitelist" annotations which
++      allow access from rfc1918 addresses.
+ spec:
+   mutateExistingOnPolicyUpdate: true
+   generateExistingOnPolicyUpdate: true
+@@ -96,7 +96,7 @@ spec:
+         any:
+           - resources:
+               annotations:
+-                external-dns.home.arpa/enabled: "true"
++                external-dns.home.arpa/public: "true"
+       mutate:
+         targets:
+           - apiVersion: networking.k8s.io/v1
+diff --git a/kubernetes/apps/networking/kustomization.yaml b/kubernetes/apps/networking/kustomization.yaml
+index 65de13c..93c427c 100644
+--- a/kubernetes/apps/networking/kustomization.yaml
++++ b/kubernetes/apps/networking/kustomization.yaml
+@@ -9,6 +9,6 @@ resources:
+   #- ./cloudflare-ddns/ks.yaml
+   #- ./external-dns/ks.yaml
+   - ./ingress-nginx/ks.yaml
+-  - ./pod-gateway/ks.yaml
+-  # Additional Resources
+-  #- ./external-services
++  #- ./k8s-gateway/ks.yaml
++  # Standard Resources
++  - ./external-services
+diff --git a/kubernetes/apps/networking/pod-gateway/downloads/helmrelease.yaml b/kubernetes/apps/networking/pod-gateway/downloads/helmrelease.yaml
+deleted file mode 100644
+index b63d356..0000000
+--- a/kubernetes/apps/networking/pod-gateway/downloads/helmrelease.yaml
++++ /dev/null
+@@ -1,118 +0,0 @@
+----
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrelease_v2beta1.json
+-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+-kind: HelmRelease
+-metadata:
+-  name: pod-gateway-downloads
+-  namespace: networking
+-spec:
+-  interval: 15m
+-  chart:
+-    spec:
+-      chart: pod-gateway
+-      version: 6.5.1
+-      sourceRef:
+-        kind: HelmRepository
+-        name: angelnu
+-        namespace: flux-system
+-  maxHistory: 3
+-  install:
+-    createNamespace: true
+-    remediation:
+-      retries: 3
+-  upgrade:
+-    cleanupOnFail: true
+-    remediation:
+-      retries: 3
+-  uninstall:
+-    keepHistory: false
+-  values:
+-    image:
+-      repository: ghcr.io/angelnu/pod-gateway
+-      tag: v1.8.1@sha256:690b6365728fe9012ad4cdfca38334992664596513dca187d1b93d2025205776
+-    podAnnotations:
+-      configmap.reloader.stakater.com/reload: downloads-gateway-pod-gateway
+-      secret.reloader.stakater.com/reload: downloads-gateway-vpnconfig
+-    routed_namespaces:
+-      - downloads
+-    DNSPolicy: ClusterFirst
+-    settings:
+-      NOT_ROUTED_TO_GATEWAY_CIDRS: &local_cidrs >-
+-        192.168.0.0/16 172.16.0.0/12 10.0.0.0/8
+-      #VPN_LOCAL_CIDRS: *local_cidrs
+-      VPN_BLOCK_OTHER_TRAFFIC: true
+-      VPN_TRAFFIC_PORT: 2050
+-      VPN_INTERFACE: "tun0"
+-      VXLAN_ID: 43
+-    webhook:
+-      gatewayAnnotation: setGateway
+-      gatewayDefault: false
+-      gatewayLabel: setGateway
+-      image:
+-        repository: ghcr.io/angelnu/gateway-admision-controller
+-        tag: v3.9.0@sha256:4e169da5af107a9c6c784d3e03c89da07fad45f18358ab5b7177662df12d955a
+-    service:
+-      vpn:
+-        enabled: true
+-        type: LoadBalancer
+-        externalTrafficPolicy: Cluster
+-        externalIPs: ["${SVC_POD_GATEWAY_ADDR}"]
+-        ports:
+-          shadowsocks:
+-            enabled: true
+-            port: 8388
+-    addons:
+-      vpn:
+-        enabled: true
+-        type: gluetun
+-        networkPolicy:
+-          enabled: false
+-        gluetun:
+-          image:
+-            repository: ghcr.io/qdm12/gluetun
+-            tag: v3.34.3@sha256:3b4d498939ef1f9ceac9049a73598acfcda25a9e58010fcd991afed32cd16eac
+-        env:
+-          - name: VPN_SERVICE_PROVIDER
+-            value: ivpn
+-          - name: VPN_TYPE
+-            value: openvpn
+-          - name: VPN_ENDPOINT_PORT
+-            value: 2050
+-          - name: FIREWALL
+-            value: "off"
+-          - name: SHADOWSOCKS
+-            value: "on"
+-          - name: DOT
+-            value: "off"
+-          - name: OPENVPN_USER
+-            valueFrom:
+-              secretKeyRef:
+-                name: pod-gateway-downloads
+-                key: openvpn-username
+-          - name: OPENVPN_PASSWORD
+-            valueFrom:
+-              secretKeyRef:
+-                name: pod-gateway-downloads
+-                key: openvpn-username
+-          - name: SERVER_COUNTRIES
+-            value: "Canada"
+-          - name: FIREWALL_VPN_INPUT_PORTS
+-            value: "42557"
+-        resources:
+-          requests:
+-            cpu: 5m
+-            memory: 64M
+-          limits:
+-            memory: 64M
+-        securityContext:
+-          capabilities:
+-            add:
+-              - NET_ADMIN
+-      netshoot:
+-        enabled: true
+-        resources:
+-          requests:
+-            cpu: 5m
+-            memory: 10M
+-          limits:
+-            memory: 10M
+\ No newline at end of file
+diff --git a/kubernetes/apps/networking/pod-gateway/downloads/secret.sops.yaml b/kubernetes/apps/networking/pod-gateway/downloads/secret.sops.yaml
+deleted file mode 100644
+index 2b65759..0000000
+--- a/kubernetes/apps/networking/pod-gateway/downloads/secret.sops.yaml
++++ /dev/null
+@@ -1,41 +0,0 @@
+-apiVersion: v1
+-kind: Secret
+-metadata:
+-    name: pod-gateway-downloads
+-    namespace: networking
+-type: Opaque
+-stringData:
+-    openvpn-username: ENC[AES256_GCM,data:U8dWZWtleFBBINSg,iv:qY2ilwP98i5ZzkiV5ahyubWnH7yJ/o1WCQ7FdkBVOZ8=,tag:NQTk3uMfTtocogFcDuiKcA==,type:str]
+-sops:
+-    kms: []
+-    gcp_kms: []
+-    azure_kv: []
+-    hc_vault: []
+-    age:
+-        - recipient: age1ghh53ja2rkyvwc29sxzrz9d9t0f5g0qvkcd9wuem5h2tld5wtyfs8ewz9x
+-          enc: |
+-            -----BEGIN AGE ENCRYPTED FILE-----
+-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBkRjhqdVhYWkR4ZjZaTDh0
+-            Q1dJb2xhTUROcGZXdEtabHVtR1pyU294SENFCjBCd0pRd2lCTU9LMzB3M3RHcmIz
+-            dENEVmRURFpBZW1oSDdYU3VjeGZKMzgKLS0tIGhxQnJIOTBzOHZTalhGS1hiTW1W
+-            aVhsUlVWTUdkcXVGbW9WZDV6YmIxczgKlr48MbznDqfXwxL1jfSZu9OrwQNPagkf
+-            sRAQx+038yF+MxydBNrOp+TrNVxdeL3yUDy+wuMfsHqXUem6BWtkyw==
+-            -----END AGE ENCRYPTED FILE-----
+-    lastmodified: "2023-06-04T14:41:36Z"
+-    mac: ENC[AES256_GCM,data:RYFkmmxdG7UJZrlMx/sMgBHRfIyC/1kPmfgB+VuJo4Hq1rNb0WsqZtTDiM/I1yOSY2ZvbgyZZBH5i2DH/UxsHuD+vaIDp4oBQzeoFJDxH36PULz6QcIUw5KTspZsWA8r76Gjyw/Zk2IggTynErlH38jhiV/4d+eA5lIHBM0bDKw=,iv:kS7DcIstzMGDvVsn4VRgy+csPGwfCf0VsBn/T+3zYMY=,tag:71LEMU48GBGzsCczb3FCdA==,type:str]
+-    pgp:
+-        - created_at: "2023-06-04T14:39:52Z"
+-          enc: |
+-            -----BEGIN PGP MESSAGE-----
+-
+-            hF4DuBz7K6VE7cMSAQdAjtvFZqqGPFAkvOMtcmPd9YqBKI2JGpRCaPsQFEwwPg4w
+-            ylWoqg49heFpXMokZCtxlKkRi4vF1qEERq1XsdgCqw8QMlyqiz0n+RkRWIVCIx0f
+-            0pUBSPx7KDvahq3+NQA8fIuhYGHSpvnMR3C/AYINiahVacfcy/DbcUefkplP8uZU
+-            7S3mNghOD6+WwfgtianiW/VBBocwEQWmR0J4rtkwcC8SHPlyvGhCo/AJz9DOkCxr
+-            cR8tVMTt4Ke+duMgAdH0Cl/0xzqI55+NkGLEznEt6ib9kukO6+wholY7BHBSOFKt
+-            kvffAnxLRQ==
+-            =+cbx
+-            -----END PGP MESSAGE-----
+-          fp: 97E082451A4C10B2A9C8681C09DEECDAFFE8153F
+-    encrypted_regex: ^(data|stringData)$
+-    version: 3.7.3
+diff --git a/kubernetes/apps/networking/pod-gateway/ks.yaml b/kubernetes/apps/networking/pod-gateway/ks.yaml
+deleted file mode 100644
+index 7c7ebf3..0000000
+--- a/kubernetes/apps/networking/pod-gateway/ks.yaml
++++ /dev/null
+@@ -1,21 +0,0 @@
+----
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kustomization_v1beta2.json
+-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+-kind: Kustomization
+-metadata:
+-  name: cluster-apps-pod-gateway-downloads
+-  namespace: flux-system
+-spec:
+-  path: ./kubernetes/apps/networking/pod-gateway/downloads
+-  prune: true
+-  sourceRef:
+-    kind: GitRepository
+-    name: homelab-as-code
+-  healthChecks:
+-    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+-      kind: HelmRelease
+-      name: pod-gateway-downloads
+-      namespace: networking
+-  interval: 30m
+-  retryInterval: 1m
+-  timeout: 3m
+\ No newline at end of file
+diff --git a/kubernetes/apps/rook-ceph/readme.md b/kubernetes/apps/rook-ceph/readme.md
+index 0cfc5e9..c7668a9 100644
+--- a/kubernetes/apps/rook-ceph/readme.md
++++ b/kubernetes/apps/rook-ceph/readme.md
+@@ -1,5 +1,4 @@
+ # Rook-Ceph
+ 
+-My cluster now has enough resources to run a ceph deployment.
+-
+-I am elated, but unfamiliar.
+\ No newline at end of file
++At the moment, my cluster lacks the needed compute resources to run a full-featured rook cluster.
++I am using Longhorn to manage PVs instead.
+diff --git a/kubernetes/apps/rook-ceph/rook-ceph/app/helmrelease.yaml b/kubernetes/apps/rook-ceph/rook-ceph/app/helmrelease.yaml
+index 7de5616..fc03bec 100644
+--- a/kubernetes/apps/rook-ceph/rook-ceph/app/helmrelease.yaml
++++ b/kubernetes/apps/rook-ceph/rook-ceph/app/helmrelease.yaml
+@@ -10,7 +10,7 @@ spec:
+   chart:
+     spec:
+       chart: rook-ceph
+-      version: v1.11.7
++      version: v1.11.6
+       sourceRef:
+         kind: HelmRepository
+         name: rook-ceph
+@@ -135,7 +135,7 @@ spec:
+       enabled: false
+     resources:
+       requests:
+-        cpu: 109m
+-        memory: 204Mi
++        cpu: 10m
++        memory: 128Mi
+       limits:
+-        memory: 453Mi
++        memory: 256Mi
+diff --git a/kubernetes/apps/rook-ceph/rook-ceph/cluster/helmrelease.yaml b/kubernetes/apps/rook-ceph/rook-ceph/cluster/helmrelease.yaml
+index 8bae8ff..bc2e88d 100644
+--- a/kubernetes/apps/rook-ceph/rook-ceph/cluster/helmrelease.yaml
++++ b/kubernetes/apps/rook-ceph/rook-ceph/cluster/helmrelease.yaml
+@@ -9,7 +9,7 @@ spec:
+   chart:
+     spec:
+       chart: rook-ceph-cluster
+-      version: v1.11.7
++      version: v1.11.6
+       sourceRef:
+         kind: HelmRepository
+         name: rook-ceph
+@@ -29,49 +29,15 @@ spec:
+     monitoring:
+       enabled: false
+       createPrometheusRules: true
+-      resources:
+-        mgr:
+-          requests:
+-            cpu: "60m"
+-            memory: "549M"
+-          limits:
+-            memory: "1219M"
+-        mon:
+-          requests:
+-            cpu: "20m"
+-            memory: "477M"
+-          limits:
+-            memory: "1059M"
+-        osd:
+-          requests:
+-            cpu: "100m"
+-            memory: "2678M"
+-          limits:
+-            memory: "5944M"
+-        mgr-sidecar:
+-          requests:
+-            cpu: "10m"
+-            memory: "94M"
+-          limits:
+-            memory: "208M"
+-        crashcollector:
+-          requests:
+-            cpu: "5m"
+-            memory: "64M"
+-          limits:
+-            memory: "64M"
+-        logcollector:
+-          requests:
+-            cpu: "15m"
+-            memory: "100M"
+-          limits:
+-            memory: "1G"
+-        cleanup:
+-          requests:
+-            cpu: "250m"
+-            memory: "100M"
+-          limits:
+-            memory: "1G"
++    resources:
++      mon:
++        requests:
++          cpu: 100m
++          memory: 300M
++      logcollector:
++        requests:
++          cpu: 100m
++          memory: 30M
+     ingress:
+       dashboard:
+         ingressClassName: nginx
+@@ -110,13 +76,13 @@ spec:
+         nodes:
+           - name: amd64-server-7f97c6.int.zynthovian.xyz
+             devices:
+-              - name: /dev/rook/osd
++              - name: /dev/cryptroot/rook
+           - name: amd64-server-a2e7bb.int.zynthovian.xyz
+             devices:
+-              - name: /dev/rook/osd
++              - name: /dev/cryptroot/rook
+           - name: amd64-server-b5915c.int.zynthovian.xyz
+             devices:
+-              - name: /dev/rook/osd
++              - name: /dev/cryptroot/rook
+     cephBlockPools:
+       - name: ceph-blockpool
+         spec:
+@@ -191,7 +157,7 @@ spec:
+             port: 80
+             resources:
+               requests:
+-                cpu: 30m
++                cpu: 100m
+                 memory: 128M
+               limits:
+                 memory: 2Gi
+diff --git a/kubernetes/flux/repositories/helm/angelnu.yaml b/kubernetes/flux/repositories/helm/angelnu.yaml
+deleted file mode 100644
+index 54e5a8b..0000000
+--- a/kubernetes/flux/repositories/helm/angelnu.yaml
++++ /dev/null
+@@ -1,11 +0,0 @@
+----
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrepository_v1beta2.json
+-apiVersion: source.toolkit.fluxcd.io/v1beta2
+-kind: HelmRepository
+-metadata:
+-  name: angelnu
+-  namespace: flux-system
+-spec:
+-  interval: 30m
+-  url: https://angelnu.github.io/helm-charts
+-  timeout: 3m
+\ No newline at end of file
+diff --git a/kubernetes/flux/repositories/helm/kustomization.yaml b/kubernetes/flux/repositories/helm/kustomization.yaml
+index 88b226e..661d450 100644
+--- a/kubernetes/flux/repositories/helm/kustomization.yaml
++++ b/kubernetes/flux/repositories/helm/kustomization.yaml
+@@ -3,7 +3,6 @@
+ apiVersion: kustomize.config.k8s.io/v1beta1
+ kind: Kustomization
+ resources:
+-  - ./angelnu.yaml
+   - ./backube.yaml
+   - ./bitnami.yaml
+   - ./bjw-s.yaml
+@@ -21,6 +20,6 @@ resources:
+   - ./metrics-server.yaml
+   - ./piraeus.yaml
+   - ./prometheus-community.yaml
+-  - ./rook-ceph.yaml
++  # - ./rook-ceph.yaml
+   - ./stakater.yaml
+   - ./weave-gitops.yaml
+diff --git a/kubernetes/flux/repositories/helm/rook-ceph.yaml b/kubernetes/flux/repositories/helm/rook-ceph.yaml
+index 5428c46..f353802 100644
+--- a/kubernetes/flux/repositories/helm/rook-ceph.yaml
++++ b/kubernetes/flux/repositories/helm/rook-ceph.yaml
+@@ -1,5 +1,5 @@
+ ---
+-# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrepository_v1beta2.json
++# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrepository_v1beta2.json
+ apiVersion: source.toolkit.fluxcd.io/v1beta2
+ kind: HelmRepository
+ metadata:
+diff --git a/kubernetes/flux/vars/cluster-settings.yaml b/kubernetes/flux/vars/cluster-settings.yaml
+index 0ea4ef8..bcb528c 100644
+--- a/kubernetes/flux/vars/cluster-settings.yaml
++++ b/kubernetes/flux/vars/cluster-settings.yaml
+@@ -5,19 +5,17 @@ metadata:
+   namespace: flux-system
+   name: cluster-settings
+ data:
+-  # --[ General Cluster Settings]
+   CLUSTER_TIMEZONE: "America/Detroit"
+-  # --[ Cluster security context ]
++  # //Cluster security context//
+   SECURITY_CONTEXT_RUN_AS_USER: "1009"
+   SECURITY_CONTEXT_RUN_AS_GROUP: "1009"
+   SECURITY_CONTEXT_FS_GROUP: "1009"
+-  # --[ Cluster network cidrs ]
++  # //Cluster network cidrs//
+   NET_NODE_CIDR: "172.20.0.0/25"
+   NET_POD_CIDR: "10.42.0.0/16"
+   NET_SVC_CIDR: "10.43.0.0/16"
+   NET_EIP_CIDR: "172.21.0.0/16"
+-  # --[ Service LBIPs ]
++  # //Service LBIPs//
+   SVC_NGINX_ADDR: "172.21.0.0"
+   SVC_SYNCTHING_ADDR: "172.21.0.1"
+   SVC_SYSLOG_ADDR: "172.21.0.50"
+-  SVC_POD_GATEWAY_ADDR: "172.21.0.20"

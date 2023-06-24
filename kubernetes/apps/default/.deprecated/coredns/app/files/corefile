@@ -1,0 +1,57 @@
+local:65535 {
+  ready
+  health
+}
+
+(cloudflare) {
+  forward . tls://1.1.1.1 tls://1.0.0.1 {
+    tls_servername cloudflare-dns.com
+    #except zynthovian.xyz *.zynthovian.xyz
+  }
+}
+
+(blacklist) {
+  hosts /etc/hosts.blacklist {
+    reload 3600s
+    no_reverse
+    fallthrough
+  }
+}
+
+(global) {
+  log
+  errors
+  nsid "zynthovian.xyz kubernetes cluster"
+  import cloudflare
+  import blacklist
+  cache 30 {
+    prefetch 5 10m 10%
+  }
+  #redisc 3600 {
+  #  endpoint coredns-redisc.default.svc.cluster.local
+  #}
+  kubernetes cluster.local in-addr.arpa ip6.arpa {
+    pods insecure
+    fallthrough in-addr.arpa ip6.arpa
+    ttl 30
+  }
+  root /etc/coredns/zones
+  file /etc/coredns/zones/zynthovian.xyz.db zynthovian.xyz
+  dnssec
+  loop
+  reload
+  loadbalance
+  prometheus :9153
+  minimal
+}
+
+.:53 {
+  import global
+}
+
+#tls://.:853 {
+#  import global
+#  import blacklist
+#  import cloudflare
+#  tls /etc/tls/fullchain.pem /etc/tls/privkey.pem
+#}

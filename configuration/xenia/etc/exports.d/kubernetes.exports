@@ -1,0 +1,3 @@
+/srv/nfs/media 172.22.0.10(sec=sys,rw,no_subtree_check,all_squash,anonuid=568,anongid=100)
+/srv/nfs/media 172.22.0.11(sec=sys,rw,no_subtree_check,all_squash,anonuid=568,anongid=100)
+/srv/nfs/media 172.22.0.12(sec=sys,rw,no_subtree_check,all_squash,anonuid=568,anongid=100)

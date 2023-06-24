@@ -1,4 +1,4 @@
 old/
-privatekeys/
+private_keys/
 ansible/files/private_keys/
 kubernetes/apps/default/netbox/app/bootstrap/files/*.sql.gz

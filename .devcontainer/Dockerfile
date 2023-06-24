@@ -12,18 +12,20 @@ RUN /bin/true \
     && echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories
 
 # -{ PMINST: Important system utilities }
-RUN apk add --upgrade \
+RUN apk add --upgrade --no-cache \
     util-linux pciutils usbutils coreutils binutils findutils grep iproute2
+
+RUN apk add --upgrade --no-cache dog
 
 RUN apk add --upgrade \
     zsh bat direnv curl exa stow file git skim neovim starship tzdata \
     ca-certificates gpg gpg-agent openssh-client libcrypto3 \
-    python3 py3-pip sshpass pcre
+    python3 py3-pip sshpass pcre rsync
 
 # Environment tools (For Terraform, Kubernetes & Ansible GitOps workflow)
-RUN apk add --upgrade \
+RUN apk add --upgrade --no-cache \
     kubectl kustomize helm ansible terraform age pre-commit jq yq \
-    yamllint ansible-lint ipcalc sops flux
+    yamllint ansible-lint ipcalc sops flux ceph17-mgr-dashboard
 
 # Install go-task
 RUN sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin

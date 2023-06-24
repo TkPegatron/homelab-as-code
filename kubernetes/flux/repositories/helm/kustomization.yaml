@@ -20,6 +20,7 @@ resources:
   - ./kyverno.yaml
   - ./longhorn.yaml
   - ./metrics-server.yaml
+  - ./netmaker.yaml
   - ./piraeus.yaml
   - ./prometheus-community.yaml
   - ./rook-ceph.yaml

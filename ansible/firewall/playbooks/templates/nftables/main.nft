@@ -52,17 +52,22 @@ table inet primary {
         # -{Allow connections to services running on the local system}
         tcp dport 22 jump log-accept comment "Secure Shell"
         udp dport {67,68} accept comment "DHCP"
+        #-------------------------------------#
+        # -{Domain Name System}
+        meta l4proto { udp, tcp } th dport 53 jump log-accept comment "Accept DNS - Unbound"
+        meta l4proto { udp, tcp } th dport 2053 jump log-accept comment "Accept DNS - BIND"
         # -{Accept DNS, multicast DNS, and LLMNR}
-        meta l4proto { udp, tcp } th dport 53 accept comment "Accept DNS"
         udp dport mdns ip6 daddr ff02::fb accept comment "Accept mDNS"
         udp dport mdns ip daddr 224.0.0.251 accept comment "Accept mDNS"
         meta l4proto { udp, tcp } th dport llmnr accept comment "Accept llmnr"
+        #-------------------------------------#
         # -{Accept FTP}
         tcp dport 20-21 jump log-accept
         udp dport 69 jump log-accept
         tcp dport 60000-60029 jump log-accept
+        #-------------------------------------#
         # -{Allow Kubernetes API}
-        tcp dport 6443 accept
+        tcp dport 6443 jump log-accept
         return
     }
 

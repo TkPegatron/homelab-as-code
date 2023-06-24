@@ -24,7 +24,7 @@
     - role: geerlingguy.node_exporter
     - role: nftables-firewall
     - role: keepalived
-    - role: dhcp-kea
+    - role: infra-dhcp
     - role: fail2ban
     - role: arillso.logrotate
     - role: routing

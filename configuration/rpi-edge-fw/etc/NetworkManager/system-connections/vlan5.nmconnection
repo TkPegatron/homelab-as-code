@@ -1,0 +1,15 @@
+[connection]
+id=vlan5
+interface-name=wan
+type=vlan
+uuid=4a328eb8-fe42-4bd3-a331-e678a22ab6e9
+autoconnect=true
+read-only=true
+
+[vlan]
+interface-name=wan
+parent=eth0
+id=5
+
+[ipv4]
+method=auto

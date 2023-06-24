@@ -20,7 +20,8 @@
   "yaml.schemaStore.enable": true,
   "yaml.schemas": {
     "ansible": "ansible/**/*.yml",
-    "kubernetes": "kubernetes/**/*.yaml"
+    "kubernetes": "kubernetes/**/*.yaml",
+    "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.4-standalone-strict/all.json": "file:///workspace/kubernetes/apps/networking/external-dns/app/shared/dnsendpoint-crd.yaml"
   },
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs":"active",
@@ -28,5 +29,6 @@
   "editor.guides.highlightActiveBracketPair": true,
   "editor.hover.delay": 1500,
   "editor.renderWhitespace": "all",
-  "files.trimTrailingWhitespace": true
+  "files.trimTrailingWhitespace": true,
+  "ansible.python.interpreterPath": "/usr/bin/python"
 }

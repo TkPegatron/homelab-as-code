@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns
+spec:
+  ports:
+  - {"name":"udp-53","port":53,"protocol":"UDP"}
+  - {"name":"tcp-53","port":53,"protocol":"TCP"}
+  - {"name":"tcp-853","port":853,"protocol":TCP}
+  type: ClusterIP
+  externalIPs:
+    - 172.21.0.53

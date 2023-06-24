@@ -1,0 +1,1 @@
+/srv/nfs/media 172.22.1.0/25(sec=sys,rw,no_subtree_check,all_squash,anonuid=1000,anongid=1000)

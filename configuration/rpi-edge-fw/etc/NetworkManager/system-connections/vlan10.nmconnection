@@ -1,0 +1,16 @@
+[connection]
+id=vlan10
+interface-name=man
+type=vlan
+uuid=c742a18e-39d6-4b12-851c-b20e1918d4e5
+autoconnect=true
+read-only=true
+
+[vlan]
+interface-name=man
+parent=eth0
+id=10
+
+[ipv4]
+method=manual
+address=172.22.0.1/25

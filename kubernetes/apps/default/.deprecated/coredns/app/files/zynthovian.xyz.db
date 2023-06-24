@@ -1,0 +1,14 @@
+zynthovian.xyz     3600  IN SOA diva.ns.cloudflare.com dns.cloudflare.com 2043058597 10000 2400 604800 3600
+zynthovian.xyz.    86400 IN NS  diva.ns.cloudflare.com.
+zynthovian.xyz.    86400 IN NS  joel.ns.cloudflare.com.
+zynthovian.xyz.    86400 IN NS  ns.zynthovian.xyz.
+ngfw.zynthovian.xyz.     IN A   172.22.0.1
+xenia.zynthovian.xyz.    IN A   172.22.0.3
+nginx.zynthovian.xyz.    IN A   172.21.0.0
+ns.zynthovian.xyz.       IN A   172.21.0.53
+
+; Host Aliases
+nas.xynthovian.xyz.      IN CNAME xenia.zynthovian.xyz.
+
+; Kubernetes LoadBalancer Ingresses
+*.zynthovian.xyz.        IN CNAME  nginx.zynthovian.xyz.

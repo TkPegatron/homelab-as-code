@@ -12,7 +12,7 @@ includes:
   an: .taskfiles/ansible/tasks.yml
   #es: .taskfiles/ExternalSecrets/Tasks.yml
   fx: .taskfiles/flux/tasks.yml
-  #ku: .taskfiles/Kubernetes/Tasks.yml
+  ku: .taskfiles/kubernetes/Tasks.yml
   #vs: .taskfiles/VolSync/Tasks.yml
 
 tasks:

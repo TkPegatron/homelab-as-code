@@ -1,0 +1,61 @@
+#!/usr/sbin/nft -f
+
+table inet global {
+  chain log-accept {
+    # -{Log accepted packets passed to this chain}
+    ct state new log group 1 accept
+  }
+  chain input_wan {
+    icmp type echo-request limit rate 5/second accept
+    return
+  }
+  chain input_trusted {
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+    # -{Accept DHCP and DNS connections}
+    udp dport {67,68} accept comment "DHCP"
+    meta l4proto {tcp,udp} th dport 53 accept comment "DNS"
+    meta l4proto {tcp,udp} th dport 5201 accept
+    # -{Accept management services}
+    tcp dport 22 jump log-accept comment "Secure Shell"
+    tcp dport {80,443} jump log-accept comment "Webserver/Pihole"
+    tcp dport {8080,8443} jump log-accept comment "Unifi-controller"
+    tcp dport 179 jump log-accept comment "BGP"
+    # -{Allow NBDE client connections}
+    meta l4proto {tcp,udp} th dport 6830 accept
+    # -{Return unmatched to previous chain}
+    return
+  }
+  chain input_dispatch {
+    type filter hook input priority 0; policy drop;
+    iiftype loopback accept comment "Accept any loopback traffic"
+    ct state vmap {
+      new: continue, invalid: drop,
+      established: accept, related: accept
+    } comment "Accept established and related connections"
+    iifname {"man","lan"} jump input_trusted
+    jump input_wan
+    #
+    # ---{ Final Verdict }
+    # -{Reject any traffic returning from other chains}
+    log group 2 reject with icmpx type admin-prohibited
+  }
+  chain forward_dispatch {
+    type filter hook forward priority 0; policy drop;
+    ct state vmap {
+      new: continue, invalid: drop,
+      established: accept, related: accept
+    } comment "Accept established and related connections"
+    meta iifname . meta oifname {"man" . "lan", "lan" . "man", "lan" . "wan", "man" . "wan"} accept
+  }
+  chain prerouting_dispatch {
+    type nat hook prerouting priority -100;
+    # -{Prevent alternative nameservers}
+    iifname {"lan","man"} meta l4proto { tcp, udp } th dport 53 dnat ip to 172.22.0.1
+  }
+  chain postrouting_dispatch {
+    type nat hook postrouting priority srcnat;
+    icmp type echo-request meta nftrace set 1
+    oifname "wan" counter masquerade
+  }
+}

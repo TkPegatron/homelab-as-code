@@ -1,0 +1,16 @@
+---
+- name: Full restart vsftpd
+  ansible.builtin.service:
+    name: vsftpd
+    state: restarted
+    enabled: true
+  become: true
+  listen: "restart vsftpd"
+
+- name: Start vsftpd
+  ansible.builtin.service:
+    name: vsftpd
+    state: started
+    enabled: true
+  become: true
+  listen: "start vsftpd"

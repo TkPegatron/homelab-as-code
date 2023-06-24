@@ -1,0 +1,13 @@
+- name: "Test stuff against a host"
+  hosts: firewall
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Add nftables configuration to variable
+      ansible.builtin.set_fact:
+        nftables_rules_raw:
+          "{{ lookup('template', 'nftables/main.nft') }}"
+  roles:
+    - role: infra-dns
+    - role: nftables-firewall

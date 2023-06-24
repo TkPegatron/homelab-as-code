@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: default
+resources:
+  - ./manifest/clusterrole.yaml
+  - ./manifest/clusterrolebinding.yaml
+  - ./manifest/deployment.yaml
+  - ./manifest/service.yaml
+configMapGenerator:
+  - name: coredns
+    files:
+      - corefile=./files/corefile
+      - zynthovian.xyz.db=./files/zynthovian.xyz.db
+generatorOptions:
+  disableNameSuffixHash: true
+configurations:
+  - ./patches/kustomizeconfig.yaml
+commonLabels:
+  app.kubernetes.io/name: coredns
+  app.kubernetes.io/instance: "coredns"
+  app.kubernetes.io/managed-by: "kustomize"

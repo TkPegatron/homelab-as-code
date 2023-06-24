@@ -1,0 +1,24 @@
+# Issues
+
+
+## Named needs to be allowed to bind to 2053
+semanage port -a -t named_t -p tcp 8585
+
+
+
+
+/var/log/audit/audit.log.3:type=AVC msg=audit(1683423141.801:10321): avc:  denied  { name_bind } for  pid=47737 comm="(sd-listen)" src=6830 scontext=system_u:system_r:tangd_t:s0 tcontext=system_u:object_r:unreserved_port_t:s0 tclass=tcp_socket permissive=0
+/var/log/audit/audit.log.3:type=AVC msg=audit(1683028522.173:1186): avc:  denied  { setattr } for  pid=8166 comm="keepalived" name="keepalived_parent.datax8zVTL" dev="dm-0" ino=16799300 scontext=system_u:system_r:keepalived_t:s0 tcontext=system_u:object_r:keepalived_tmp_t:s0 tclass=file permissive=0
+/var/log/audit/audit.log.1:type=AVC msg=audit(1685662256.591:12183): avc:  denied  { write } for  pid=100449 comm="unbound" name="keys.d" dev="dm-0" ino=33619108 scontext=system_u:system_r:named_t:s0 tcontext=system_u:object_r:named_conf_t:s0 tclass=dir permissive=0
+/var/log/audit/audit.log.2:type=AVC msg=audit(1683519323.813:40173): avc:  denied  { execmem } for  pid=158538 comm="grep" scontext=system_u:system_r:fail2ban_t:s0 tcontext=system_u:system_r:fail2ban_t:s0 tclass=process permissive=0
+/var/log/audit/audit.log.1:type=AVC msg=audit(1685618643.310:11098): avc:  denied  { setpgid } for  pid=94617 comm="watchfrr" scontext=system_u:system_r:init_t:s0 tcontext=system_u:system_r:init_t:s0 tclass=process permissive=0
+/var/log/audit/audit.log.1:type=AVC msg=audit(1685618643.310:11097): avc:  denied  { map } for  pid=94616 comm="watchfrr" path="/var/tmp/frr/watchfrr.94615/logbuf.94616" dev="dm-0" ino=16830063 scontext=system_u:system_r:init_t:s0 tcontext=system_u:object_r:init_tmp_t:s0 tclass=file permissive=0
+
+
+
+
+## Allow named to bind to port 2053
+sudo semanage port --add -t dns_port_t -p tcp 2053
+sudo semanage port --add -t dns_port_t -p udp 2053
+## Allow Tang to bind to port 6830
+sudo semanage port --add -t tangd_port_t -p tcp 6830

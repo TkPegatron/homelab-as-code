@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: cnpg-system
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    spec:
+      containers:
+        - name: pgadmin
+          image: docker.io/dpage/pgadmin4:latest@sha256:8d26cc2be3d00a9c67022c9cf9e555cca14bd8955420b93fdb16dda0da0bcd3e
+          securityContext:
+            runAsNonRoot: true
+            runAsGroup: 5050
+            runAsUser: 5050
+          livenessProbe: &probe
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+          readinessProbe: *probe
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            limits:

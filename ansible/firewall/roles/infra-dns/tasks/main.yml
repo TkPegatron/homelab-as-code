@@ -1,0 +1,91 @@
+---
+- name: Install Unbound and BIND system package
+  ansible.builtin.dnf:
+    name:
+      - unbound
+      - bind
+    state: present
+  notify:
+    - restart named
+    - start named
+
+- name: Configure BIND
+  ansible.builtin.copy:
+    src: etc/named.conf
+    dest: /etc/named.conf
+    mode: "0640"
+    owner: root
+    group: named
+  notify:
+    - restart named
+    - start named
+
+- name: Configure BIND zone
+  ansible.builtin.copy:
+    src: zone.conf
+    dest: /var/named/zynthovian.xyz.zone
+    mode: "0660"
+    owner: root
+    group: named
+  notify:
+    - restart named
+    - start named
+
+- name: Copy Unbound Configuration
+  ansible.builtin.copy:
+    src: 'files/etc/unbound/unbound.conf'
+    dest: '/etc/unbound/unbound.conf'
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    validate: /usr/sbin/unbound-checkconf %s
+  notify:
+    - restart unbound
+    - start unbound
+
+
+# - name: Execute prerequired scripts
+#   block:
+#     - name: Create Roothints and Key
+#       ansible.builtin.script: files/etc/unbound/scripts/update-roothints.sh
+#       args:
+#         executable: /bin/bash
+#         creates: "/etc/unbound/keys.d/root.key"
+#     - name: Create Blocklist file
+#       ansible.builtin.script: files/etc/unbound/scripts/update-blocklist.sh
+#       args:
+#         executable: /bin/bash
+#         creates: "/etc/unbound/conf.d/blocklist.conf"
+
+# - name: Copy Scripts for use with systemd timers
+#   block:
+#     - name: Create scripts directory
+#       ansible.builtin.file:
+#         path: /etc/unbound/scripts
+#         state: directory
+#         owner: unbound
+#         group: unbound
+#         mode: "u=rwx,g=rwx,o=rx"
+#     - name: Copy Roothint Updater
+#       ansible.builtin.copy:
+#         src: files/etc/unbound/scripts/update-roothints.sh
+#         dest: /etc/unbound/scripts/update-roothints.sh
+#         owner: unbound
+#         group: unbound
+#         mode: "u=rx,g=rx,o=r"
+#     - name: Copy Blocklist Updater
+#       ansible.builtin.copy:
+#         src: files/etc/unbound/scripts/update-blocklist.sh
+#         dest: /etc/unbound/scripts/update-blocklist.sh
+#         owner: unbound
+#         group: unbound
+#         mode: "u=rx,g=rx,o=r"
+
+# - name: Copy Unbound Configuration
+#   ansible.builtin.copy:
+#     src: 'files/etc/unbound/unbound.conf'
+#     dest: '/etc/unbound/unbound.conf'
+#     owner: root
+#     group: root
+#     mode: u=rw,g=r,o=r
+#     validate: /usr/sbin/unbound-checkconf %s

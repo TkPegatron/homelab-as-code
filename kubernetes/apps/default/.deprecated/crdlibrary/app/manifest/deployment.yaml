@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crdstore
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+  template:
+    spec:
+      serviceAccountName: crdstore
+      volumes:
+        - name: crdstore
+          persistentVolumeClaim:
+            claimName: crdstore
+        - name: config
+          configMap:
+            name: crdlibrary-files
+      containers:
+        - name: webserver
+          image: ghcr.io/nginxinc/nginx-unprivileged:1.23.3-alpine-slim
+          securityContext:
+            runAsUser: 101
+            runAsGroup: 101
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: http
+          volumeMounts:
+            - name: crdstore
+              mountPath: /usr/share/nginx/html/
+            - name: config
+              mountPath: /etc/nginx/default.conf

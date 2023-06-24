@@ -1,0 +1,71 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: netmaker
+  namespace: netmaker-system
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: netmaker
+      version: 0.3.4
+      sourceRef:
+        kind: HelmRepository
+        name: netmaker
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    replicas: 3
+    image:
+      # -- The image repo to pull Netmaker image from
+      repository: gravitl/netmaker
+      # -- Pull Policy for images
+      pullPolicy: Always
+      # -- Override the image tag to pull
+      tag: "v0.17.1"
+    baseDomain: "vpn.zynthovian.xyz"
+    RWXStorageClassName: longhorn
+    mq:
+      RWX:
+        storageClassName: longhorn
+    dns:
+      enabled: false
+    ingress:
+      enabled: true
+      className: nginx
+    wiregurad:
+      kernel: true
+    postgresql-ha:
+      enabled: true
+    podSecurityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_RAW
+        - SYS_MODULE
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              kind: Pod
+            patch: |-
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: not-used
+                namespace: not-used
+                labels:
+                  app.kubernetes.io/part-of: netmaker

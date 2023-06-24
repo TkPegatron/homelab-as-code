@@ -1,0 +1,27 @@
+{
+  device: device_list(name: "RPi-Edge-A") {
+    name,
+    tags{
+      name
+      slug
+    }
+    site {
+      name
+      slug
+      asn
+      time_zone
+    }
+    interfaces {
+      name,
+      ip_addresses {
+        address
+      }
+      parent {
+        name
+      },
+      vlan: untagged_vlan {
+        vid
+      }
+    }
+  }
+}

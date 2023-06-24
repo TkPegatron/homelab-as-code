@@ -1,0 +1,73 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: netbox-redis
+  namespace: default
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 1.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    controller:
+      strategy: RollingUpdate
+    image:
+      repository: docker.io/library/redis
+      tag: "7.0.11-alpine"
+    command: ["/bin/sh", "-c", "redis-server --appendonly yes --port 6379 --requirepass $REDIS_PASSWORD"]
+    env:
+      REDIS_REPLICATION_MODE: master
+      REDIS_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: netbox
+            key: REDIS_PASSWORD
+    persistence:
+      data:
+        enabled: true
+        path: /data
+        existingClaim: netbox-data
+        subPath: netbox_redis_main
+    service:
+      main:
+        ports:
+          http:
+            enabled: false
+          redis:
+            enabled: true
+            protocol: TCP
+            port: 6379
+          cache:
+            enabled: true
+            protocol: TCP
+            port: 6378
+    podAnnotations:
+      secret.reloader.stakater.com/reload: netbox
+    additionalContainers:
+      cache:
+        image: docker.io/library/redis:7.0.11-alpine
+        command: ["/bin/sh", "-c", "redis-server --port 6378 --requirepass $REDIS_CACHE_PASSWORD"]
+        env:
+          REDIS_CACHE_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: netbox
+                key: REDIS_CACHE_PASSWORD
+        volumeMounts:
+          - name: data
+            subPath: netbox_redis_cache
+            mountPath: /data

@@ -1,0 +1,16 @@
+[connection]
+id=vlan30
+interface-name=iot
+type=vlan
+uuid=67a885d2-a69d-4034-b6d4-b38e5fca3207
+autoconnect=true
+read-only=true
+
+[vlan]
+interface-name=iot
+parent=eth0
+id=30
+
+[ipv4]
+method=manual
+address=172.22.1.129/25
