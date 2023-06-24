@@ -20,7 +20,7 @@ spec:
       dnsPolicy: Default
       containers:
       - name: "coredns"
-        image: "coredns/coredns:1.9.4"
+        image: "coredns/coredns:1.10.1"
         imagePullPolicy: IfNotPresent
         args: [ "-conf", "/etc/coredns/corefile" ]
         volumeMounts:
