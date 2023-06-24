@@ -12,5 +12,5 @@ configMapGenerator:
       - ./config/configuration.yml
 generatorOptions:
   disableNameSuffixHash: true
-patches:
-  - path: ./patches/env.yaml
+#patches:
+#  - path: ./patches/env.yaml
