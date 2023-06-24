@@ -34,7 +34,7 @@ spec:
       # -- Pull Policy for images
       pullPolicy: Always
       # -- Override the image tag to pull
-      tag: "v0.17.1"
+      tag: "v0.20.2"
     baseDomain: "vpn.zynthovian.xyz"
     RWXStorageClassName: longhorn
     mq:
