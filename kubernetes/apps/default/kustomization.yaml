@@ -15,6 +15,6 @@ resources:
   # - ./netbox/ks.yaml
   # - ./postgres/ks.yaml
   # - ./redis/ks.yaml
-  # - ./syncthing/ks.yaml
+  - ./syncthing/ks.yaml
   # - ./vaultwarden/ks.yaml
   # - ./wikijs/ks.yaml
