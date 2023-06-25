@@ -1,0 +1,102 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: delete-mem-requests
+  annotations:
+    policies.kyverno.io/title: Delete memory requests
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      This policy deletes memory requests from all Pods.
+spec:
+  mutateExistingOnPolicyUpdate: true
+  generateExistingOnPolicyUpdate: true
+  rules:
+    - name: delete-mem-requests
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - calico-system
+                - tigera-operator
+          - resources:
+              kinds: ["Pod"]
+              selector:
+                matchLabels:
+                  job-name: "*"
+          - resources:
+              kinds: ["Pod"]
+              selector:
+                matchLabels:
+                  statefulset.kubernetes.io/pod-name: "*"
+          - resources:
+              annotations:
+                kyverno.io/ignore: "true"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            initContainers:
+              - (name): "*"
+                resources:
+                  requests:
+                    memory: null
+            containers:
+              - (name): "*"
+                resources:
+                  requests:
+                    memory: null
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: delete-cpu-requests
+  annotations:
+    policies.kyverno.io/title: Delete CPU requests
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      This policy deletes CPU requests from all Pods.
+spec:
+  mutateExistingOnPolicyUpdate: true
+  generateExistingOnPolicyUpdate: true
+  rules:
+    - name: delete-cpu-requests
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - calico-system
+                - tigera-operator
+          - resources:
+              kinds: ["Pod"]
+              selector:
+                matchLabels:
+                  job-name: "*"
+          - resources:
+              kinds: ["Pod"]
+              selector:
+                matchLabels:
+                  statefulset.kubernetes.io/pod-name: "*"
+          - resources:
+              annotations:
+                kyverno.io/ignore: "true"
+      mutate:
+        patchStrategicMerge:
+          spec:
+            initContainers:
+              - (name): "*"
+                resources:
+                  requests:
+                    cpu: null
+            containers:
+              - (name): "*"
+                resources:
+                  requests:
+                    cpu: null
