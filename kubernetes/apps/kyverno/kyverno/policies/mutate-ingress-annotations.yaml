@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kyverno.io/clusterpolicy_v1.json
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -38,6 +39,7 @@ spec:
               +(nginx.ingress.kubernetes.io/auth-snippet): |
                 proxy_set_header X-Forwarded-Method $request_method;
 ---
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kyverno.io/clusterpolicy_v1.json
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -71,6 +73,7 @@ spec:
               +(external-dns.alpha.kubernetes.io/target): |-
                 ipv4.zynthovian.xyz
 ---
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kyverno.io/clusterpolicy_v1.json
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
