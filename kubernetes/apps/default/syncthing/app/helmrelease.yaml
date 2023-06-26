@@ -67,11 +67,9 @@ spec:
         enabled: true
         ingressClassName: nginx
         annotations:
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: "Syncthing"
-          gethomepage.dev/icon: syncthing
           hajimari.io/appName: "Syncthing"
           hajimari.io/icon: mdi:folder-sync
+          external-dns.alpha.kubernetes.io/target: ingress.zynthovian.xyz
         hosts:
           - host: &host "{{ .Release.Name }}.zynthovian.xyz"
             paths:

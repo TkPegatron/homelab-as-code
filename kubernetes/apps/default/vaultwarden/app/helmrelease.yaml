@@ -54,6 +54,7 @@ spec:
         annotations:
           hajimari.io/appName: "Vaultwarden"
           hajimari.io/icon: mdi:account-lock
+          external-dns.alpha.kubernetes.io/target: ingress.zynthovian.xyz
         hosts:
           - host: &host vault.zynthovian.xyz
             paths:

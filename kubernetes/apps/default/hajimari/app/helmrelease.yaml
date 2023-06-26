@@ -53,6 +53,7 @@ spec:
         ingressClassName: nginx
         annotations:
           hajimari.io/enable: "false"
+          external-dns.alpha.kubernetes.io/target: ingress.zynthovian.xyz
         hosts:
           - host: &host apps.zynthovian.xyz
             paths:
