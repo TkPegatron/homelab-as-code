@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/helmrelease_v2beta1.json
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -241,3 +241,17 @@ spec:
         #    honor_timestamps: true
         #    static_configs:
         #      - targets: ["pikvm.turbo.ac"]
+        #  - job_name: nftfw-a
+        #    scrape_interval: 1m
+        #    scrape_timeout: 10s
+        #    metrics_path: ???????
+        #    honor_timestamps: true
+        #    static_configs:
+        #      - targets: ["172.22.0.120"]
+        #  - job_name: nftfw-b
+        #    scrape_interval: 1m
+        #    scrape_timeout: 10s
+        #    metrics_path: ???????
+        #    honor_timestamps: true
+        #    static_configs:
+        #      - targets: ["172.22.0.119"]

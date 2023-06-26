@@ -54,9 +54,6 @@ spec:
         annotations:
           hajimari.io/appName: "Vaultwarden"
           hajimari.io/icon: mdi:account-lock
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: "Vaultwarden"
-          gethomepage.dev/icon: vaultwarden
         hosts:
           - host: &host vault.zynthovian.xyz
             paths:
