@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.zynthovian.xyz/kustomize.toolkit.fluxcd.io/kustomization_v1beta2.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: cluster-monitoring-snmp-mikrotik-crs
+  namespace: flux-system
+spec:
+  path: ./kubernetes/apps/monitoring/snmp-exporter/mikrotik
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: homelab-as-code
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+      kind: HelmRelease
+      name: snmp-exporter-mikrotik
+      namespace: monitoring
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
