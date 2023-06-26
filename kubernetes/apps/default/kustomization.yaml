@@ -11,6 +11,7 @@ resources:
   # - ./authelia/ks.yaml
   # - ./glauth/ks.yaml
   - ./hajimari/ks.yaml
+  - ./kube-schemas/ks.yaml
   # - ./homepage/ks.yaml
   # - ./netbox/ks.yaml
   # - ./postgres/ks.yaml
