@@ -9,7 +9,7 @@ metadata:
     kyverno.io/ignore: "true"
 spec:
   instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:15
+  imageName: ghcr.io/cloudnative-pg/postgresql:14.8-6
   primaryUpdateStrategy: unsupervised
   storage:
     size: 10Gi
@@ -18,11 +18,7 @@ spec:
     name: cloudnative-pg-superuser-secret
   postgresql:
     parameters:
-      max_connections: "300"
+      max_connections: "600"
       shared_buffers: 512MB
   monitoring:
     enablePodMonitor: true
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "100m"
