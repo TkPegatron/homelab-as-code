@@ -5,4 +5,13 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - ./helmrelease.yaml
-  - ./dashboard.yaml
+configMapGenerator:
+  - name: speedtest-dashboard
+    files:
+      - speedtest-dashboard.json=./dashboard.json
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
+  labels:
+    grafana_dashboard: "true"
