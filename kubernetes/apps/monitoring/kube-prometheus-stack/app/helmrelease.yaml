@@ -230,28 +230,11 @@ spec:
             memory: 2000Mi
           limits:
             memory: 7000Mi
-        #additionalScrapeConfigs:
-        #  - job_name: pikvm
-        #    scrape_interval: 1m
-        #    scrape_timeout: 10s
-        #    metrics_path: /api/export/prometheus/metrics
-        #    basic_auth:
-        #      username: admin
-        #      password: 1nternalUseOnly
-        #    honor_timestamps: true
-        #    static_configs:
-        #      - targets: ["pikvm.turbo.ac"]
-        #  - job_name: nftfw-a
-        #    scrape_interval: 1m
-        #    scrape_timeout: 10s
-        #    metrics_path: ???????
-        #    honor_timestamps: true
-        #    static_configs:
-        #      - targets: ["172.22.0.120"]
-        #  - job_name: nftfw-b
-        #    scrape_interval: 1m
-        #    scrape_timeout: 10s
-        #    metrics_path: ???????
-        #    honor_timestamps: true
-        #    static_configs:
-        #      - targets: ["172.22.0.119"]
+        additionalScrapeConfigs:
+          - job_name: nftfw-a.zynthovian.xyz
+            scrape_interval: 1m
+            scrape_timeout: 10s
+            metrics_path: /metrics
+            honor_timestamps: true
+            static_configs:
+              - targets: ["172.22.0.120"]
