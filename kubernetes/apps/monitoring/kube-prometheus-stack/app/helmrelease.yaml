@@ -231,10 +231,10 @@ spec:
           limits:
             memory: 7000Mi
         additionalScrapeConfigs:
-          - job_name: nftfw-a.zynthovian.xyz
+          - job_name: external-node-exporter
             scrape_interval: 1m
             scrape_timeout: 10s
             metrics_path: /metrics
             honor_timestamps: true
             static_configs:
-              - targets: ["172.22.0.120"]
+              - targets: ["172.22.0.120:9100"]
