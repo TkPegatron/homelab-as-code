@@ -1,25 +1,14 @@
 #!/usr/sbin/nft
 flush ruleset
 
+# Fully Qualified Verdict Name for logging
+# nft.<table>.<parent-hook>.<chain>.<verdict>
+
 define nic_wan = {{ nftables_nic_wan }}
 define nic_lan = {{ nftables_nic_lan }}
 define nic_man = {{ nftables_nic_man }}
 
 table inet primary {
-
-    chain log-accept {
-        # -{Log packets sent to this chain and accept}
-        log prefix "nftables.inet.input.accept " # syslog
-        log group 1 # ulog
-        ct state new counter accept
-    }
-
-    chain log-reject {
-        # -{Log packets sent to this chain and reject}
-        log prefix "nftables.inet.input.reject " # syslog
-        log group 2 # ulog
-        ct state new counter reject with icmpx type admin-prohibited
-    }
 
     chain input_dispatch {
         type filter hook input priority 0; policy drop;
@@ -36,34 +25,10 @@ table inet primary {
 
         # -{Dispatch packets to zones by interface}
         meta iifname $nic_wan jump input_wan_zone
-        meta iifname $nic_man jump input_man_zone
         meta iifname {$nic_man, $nic_lan} jump input_trusted_zone
 
-        # -{Rate-Limited ICMP on WAN interface}
-        meta iifname $nic_wan meta l4proto { icmp, ipv6-icmp } limit rate over 2/second drop
-
         # -{Final Verdict of incoming connections}
-        jump log-reject
-    }
-
-    chain input_trusted_zone {
-        # -{Allow all ICMP communications}
-        meta l4proto { icmp, ipv6-icmp } accept
-        # -{Allow connections to services running on the local system}
-        tcp dport 22 jump log-accept comment "Secure Shell"
-        udp dport {67,68} accept comment "DHCP"
-        # -{Accept DNS, multicast DNS, and LLMNR}
-        meta l4proto { udp, tcp } th dport 53 accept comment "Accept DNS"
-        udp dport mdns ip6 daddr ff02::fb accept comment "Accept mDNS"
-        udp dport mdns ip daddr 224.0.0.251 accept comment "Accept mDNS"
-        meta l4proto { udp, tcp } th dport llmnr accept comment "Accept llmnr"
-        # -{Accept FTP}
-        tcp dport 20-21 jump log-accept
-        udp dport 69 jump log-accept
-        tcp dport 60000-60029 jump log-accept
-        # -{Allow Kubernetes API}
-        tcp dport 6443 accept
-        return
+        ct state new counter log prefix "nft.primary.input.dispatch.reject " reject with icmpx type admin-prohibited
     }
 
     chain input_wan_zone {
@@ -77,19 +42,57 @@ table inet primary {
             packet-too-big,time-exceeded,parameter-problem
         } accept
         # -{Accept and rate-limit ssh connections}
-        #tcp dport 22 ct state new limit rate 5/minute jump log-accept
+        #tcp dport 22 ct state new limit rate 5/minute jump logging_accept_wan_zone
         # -{Final Verdict of incoming connections}
-        jump log-reject
+        ct state new counter log prefix "nft.primary.input.wan_zone.reject " reject with icmpx type admin-prohibited
+    }
+    chain logging_accept_wan_zone {
+        ct state new counter log prefix "nft.primary.input.wan_zone.accept " accept
+    }
+
+    chain input_trusted_zone {
+        # -{Allow all ICMP communications}
+        meta l4proto { icmp, ipv6-icmp } jump logging_accept_trusted_zone
+        # -{Allow connections to services running on the local system}
+        tcp dport 22 jump logging_accept_trusted_zone comment "Secure Shell"
+        udp dport {67,68} jump logging_accept_trusted_zone comment "DHCP"
+        #-------------------------------------#
+        # -{Domain Name System}
+        meta l4proto { udp, tcp } th dport 53 jump logging_accept_trusted_zone comment "Accept DNS - Unbound"
+        meta l4proto { udp, tcp } th dport 2053 jump logging_accept_trusted_zone comment "Accept DNS - BIND"
+        # -{Accept DNS, multicast DNS, and LLMNR}
+        udp dport mdns ip6 daddr ff02::fb jump logging_accept_trusted_zone comment "Accept mDNS"
+        udp dport mdns ip daddr 224.0.0.251 jump logging_accept_trusted_zone comment "Accept mDNS"
+        meta l4proto { udp, tcp } th dport llmnr jump logging_accept_trusted_zone comment "Accept llmnr"
+        #-------------------------------------#
+        # -{Accept FTP}
+        tcp dport 20-21 jump logging_accept_trusted_zone
+        udp dport 69 jump logging_accept_trusted_zone
+        tcp dport 60000-60029 jump logging_accept_trusted_zone
+        #-------------------------------------#
+        # -{Allow Kubernetes API}
+        tcp dport 6443 jump logging_accept_trusted_zone
+        # -{Jump into sub-chains}
+        meta iifname $nic_man jump input_man_zone
+        # -{Final Verdict of incoming connections}
+        ct state new counter log prefix "nft.primary.input.trusted_zone.reject " reject with icmpx type admin-prohibited
+    }
+    chain logging_accept_trusted_zone {
+        ct state new counter log prefix "nft.primary.input.trusted_zone.accept " accept
     }
 
     chain input_man_zone {
         # -{Allow Routing Protocols}
-        tcp dport 179 jump log-accept comment "BGP"
+        tcp dport 179 jump logging_accept_man_zone comment "frr-bgp-speaker"
         # -{Allow NBDE client connections}
-        tcp dport 6830 jump log-accept
+        tcp dport 6830 jump logging_accept_man_zone comment "tangd-nbde"
         # -{Allow Prometheus Node Exporter}
-        tcp dport 9100 jump log-accept
-        return
+        tcp dport 9100 jump logging_accept_man_zone comment "prometheus"
+        # -{Final Verdict of incoming connections}
+        ct state new counter log prefix "nft.primary.input.man_zone.reject " reject with icmpx type admin-prohibited
+    }
+    chain logging_accept_man_zone {
+        ct state new counter log prefix "nft.primary.input.man_zone.accept " accept
     }
 
     chain forward_dispatch {
@@ -106,6 +109,8 @@ table inet primary {
             $nic_man . $nic_lan, # MAN -> LAN; allow
             $nic_lan . $nic_man  # LAN -> MAN; allow
         } accept
+        # -{Final Verdict of incoming connections}
+        ct state new counter log prefix "nft.primary.forward.dispatch.reject " reject with icmpx type admin-prohibited
     }
 
     chain prerouting_dispatch {
