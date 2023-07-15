@@ -41,7 +41,7 @@ spec:
         reloader.stakater.com/auto: "true"
     image:
       repository: ghcr.io/authelia/authelia
-      tag: master@sha256:34c750cdb44fdc928ec37608c59bed437cb8fdda59c0f41e2c64413e6e0fd6a8
+      tag: master@sha256:9e07f05b2a46553ad8c0cda8cdd60bbf6fa81e2b0686605eb208c48e4fa6fc15
     #args: ["--config", "/config/configuration.yml", "--config.experimental.filters", "expand-env"]
     envFrom: *envFrom
     enableServiceLinks: false
